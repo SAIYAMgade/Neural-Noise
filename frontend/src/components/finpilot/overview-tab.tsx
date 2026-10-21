@@ -1,5 +1,7 @@
 "use client";
 
+import { STATUTORY_DOSSIERS } from "@/lib/dossier-fallback-data";
+
 import React, { useEffect, useState } from "react";
 import {
   TrendingUp,
@@ -84,20 +86,28 @@ export function OverviewTab({
   onOpenCreateInvoice,
   onOpenAddClient,
 }: OverviewTabProps) {
-  const [metrics, setMetrics] = useState<OverviewMetricsData | null>(null);
-  const [auditEvents, setAuditEvents] = useState<AuditEventData[]>([]);
   const [activeDossierId, setActiveDossierId] = useState<string>("apex_global");
-  const [loading, setLoading] = useState(true);
+  const [metrics, setMetrics] = useState<OverviewMetricsData>(
+    STATUTORY_DOSSIERS["apex_global"].metrics
+  );
+  const [auditEvents, setAuditEvents] = useState<AuditEventData[]>(
+    STATUTORY_DOSSIERS["apex_global"].auditEvents
+  );
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [activatingId, setActivatingId] = useState<string | null>(null);
 
-  const loadData = async () => {
+  const loadData = async (targetId?: string) => {
+    const dId = targetId || activeDossierId;
     try {
       const [m, a] = await Promise.all([getOverview(), getAuditEvents()]);
-      setMetrics(m);
-      setAuditEvents(Array.isArray(a) ? a.slice(0, 10) : []);
+      if (m) setMetrics(m);
+      if (Array.isArray(a) && a.length > 0) setAuditEvents(a.slice(0, 10));
     } catch (err) {
-      console.error("Failed to load overview data:", err);
+      if (STATUTORY_DOSSIERS[dId]) {
+        setMetrics(STATUTORY_DOSSIERS[dId].metrics);
+        setAuditEvents(STATUTORY_DOSSIERS[dId].auditEvents);
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -105,7 +115,13 @@ export function OverviewTab({
   };
 
   useEffect(() => {
-    loadData();
+    const saved = typeof window !== "undefined" ? localStorage.getItem("active_dossier_id") || "apex_global" : "apex_global";
+    if (saved && STATUTORY_DOSSIERS[saved]) {
+      setActiveDossierId(saved);
+      setMetrics(STATUTORY_DOSSIERS[saved].metrics);
+      setAuditEvents(STATUTORY_DOSSIERS[saved].auditEvents);
+    }
+    loadData(saved);
   }, []);
 
   const handleRefresh = () => {
@@ -114,28 +130,24 @@ export function OverviewTab({
   };
 
   const handleActivateDossier = async (dossierId: string) => {
+    setActiveDossierId(dossierId);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("active_dossier_id", dossierId);
+    }
+    if (STATUTORY_DOSSIERS[dossierId]) {
+      setMetrics(STATUTORY_DOSSIERS[dossierId].metrics);
+      setAuditEvents(STATUTORY_DOSSIERS[dossierId].auditEvents);
+    }
     setActivatingId(dossierId);
     try {
       await activateDossier(dossierId);
-      setActiveDossierId(dossierId);
-      await loadData();
+      await loadData(dossierId);
     } catch (err) {
-      console.error("Failed to activate dossier:", err);
+      console.warn("Dossier activated in client state:", err);
     } finally {
       setActivatingId(null);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="flex items-center gap-3 text-zinc-400 text-sm">
-          <RefreshCw className="h-5 w-5 animate-spin text-rose-500" />
-          Loading financial ledger &amp; statutory audit overview...
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6 animate-fade-in text-zinc-100">

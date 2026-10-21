@@ -533,12 +533,17 @@ async def api_get_overview(session: AsyncSession = Depends(get_session)):
     )
     recent_audits = list((await session.execute(audit_stmt)).scalars().all())
 
+    clients = await list_clients(session, DEFAULT_BUSINESS_ID, limit=500)
     return {
         "total_invoiced": str(total_invoiced),
         "total_collected": str(total_collected),
         "total_outstanding": str(total_outstanding),
+        "outstanding_receivables": str(total_outstanding),
         "overdue_amount": str(overdue_amount),
         "overdue_count": overdue_count,
+        "active_invoices_count": len(invoices),
+        "overdue_invoices_count": overdue_count,
+        "clients_count": len(clients),
         "total_expenses": str(total_expenses),
         "net_cash_flow": str(total_collected - total_expenses),
         "invoices_count": len(invoices),

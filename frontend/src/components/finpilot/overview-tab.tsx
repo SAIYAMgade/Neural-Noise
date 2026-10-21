@@ -19,7 +19,8 @@ import {
   Eye,
   ExternalLink,
   ChevronRight,
-  BookOpen
+  BookOpen,
+  GitFork
 } from "lucide-react";
 import {
   getOverview,
@@ -213,7 +214,15 @@ export function OverviewTab({
               Active Statutory Financial Dossier
             </h2>
           </div>
+          <button
+            onClick={() => onNavigateTab("flowchart")}
+            className="inline-flex items-center gap-1.5 self-start md:self-auto rounded-xl bg-zinc-800/80 hover:bg-zinc-800 border border-zinc-700/80 px-3.5 py-1.5 text-xs font-semibold text-rose-300 hover:text-white transition-all shadow-xs"
+          >
+            <GitFork className="h-3.5 w-3.5 text-rose-400" />
+            <span>LangGraph Flowchart</span>
+          </button>
         </div>
+
 
         {/* 3 Dossiers Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-5">

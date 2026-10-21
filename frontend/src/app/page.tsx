@@ -17,7 +17,9 @@ import {
   Cpu,
   Award,
   ArrowLeft,
-  Home
+  Home,
+  GitFork,
+  Workflow
 } from "lucide-react";
 import { checkHealth } from "@/lib/api";
 import { LandingPage } from "@/components/neural-noise/landing-page";
@@ -30,6 +32,7 @@ import { ExpensesTab } from "@/components/finpilot/expenses-tab";
 import { TaxComplianceTab } from "@/components/finpilot/tax-compliance-tab";
 import { AgentLabTab } from "@/components/intentflow/agent-lab-tab";
 import { EvaluationsTab } from "@/components/intentflow/evaluations-tab";
+import { FlowchartTab } from "@/components/finpilot/flowchart-tab";
 
 type MainTabId =
   | "overview"
@@ -39,6 +42,7 @@ type MainTabId =
   | "clients"
   | "payments"
   | "expenses"
+  | "flowchart"
   | "agent-lab"
   | "evaluations";
 
@@ -70,6 +74,7 @@ export default function HomePage() {
     {
       title: "AI AGENTS & OBSERVABILITY",
       items: [
+        { id: "flowchart", label: "LangGraph Flowchart", icon: GitFork, badge: "Graph", badgeColor: "bg-blue-950 text-blue-300 border border-blue-800" },
         { id: "agent-lab", label: "Agent Lab & Traces", icon: Cpu, badge: "LangGraph", badgeColor: "bg-purple-950 text-purple-300 border border-purple-800" },
         { id: "evaluations", label: "AI Evals & Guardrails", icon: Award, badge: "Safety", badgeColor: "bg-teal-950 text-teal-300 border border-teal-800" },
       ],
@@ -283,6 +288,7 @@ export default function HomePage() {
                 else if (tab === "expenses") setActiveTab("expenses");
                 else if (tab === "tax-compliance") setActiveTab("tax-compliance");
                 else if (tab === "agent-lab") setActiveTab("agent-lab");
+                else if (tab === "flowchart") setActiveTab("flowchart");
               }}
             />
           )}
@@ -292,6 +298,7 @@ export default function HomePage() {
           {activeTab === "clients" && <ClientsTab />}
           {activeTab === "payments" && <PaymentsTab />}
           {activeTab === "expenses" && <ExpensesTab />}
+          {activeTab === "flowchart" && <FlowchartTab />}
           {activeTab === "agent-lab" && <AgentLabTab />}
           {activeTab === "evaluations" && <EvaluationsTab />}
         </main>

@@ -1,9 +1,10 @@
 "use client";
+
+import { getBaseUrl } from "@/lib/api";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 function QuickBooksCallbackState({
   status,
@@ -70,7 +71,7 @@ function QuickBooksCallbackContent() {
     const params = new URLSearchParams({ code });
     if (realmId) params.set("realm_id", realmId);
 
-    fetch(`${BASE}/integrations/quickbooks/callback?${params.toString()}`)
+    fetch(`${getBaseUrl()}/integrations/quickbooks/callback?${params.toString()}`)
       .then(res => {
         if (!res.ok) throw new Error(`Backend returned ${res.status}`);
         return res.json();

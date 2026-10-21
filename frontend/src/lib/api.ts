@@ -32,13 +32,15 @@ export function getBaseUrl(): string {
       return "https://neural-noise.onrender.com";
     }
   }
+  if (process.env.NODE_ENV === "production") {
+    return "https://neural-noise.onrender.com";
+  }
   return "http://localhost:8000";
 }
 
-const BASE = getBaseUrl();
-
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const base = getBaseUrl();
+  const res = await fetch(`${base}${path}`, {
     ...init,
     headers: { Accept: "application/json", ...init?.headers },
   });
@@ -52,7 +54,8 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 /** Check if API is reachable */
 export async function checkHealth(): Promise<boolean> {
   try {
-    const r = await fetch(`${BASE}/health`, { cache: "no-store" });
+    const base = getBaseUrl();
+    const r = await fetch(`${base}/health`, { cache: "no-store" });
     return r.ok;
   } catch {
     return false;

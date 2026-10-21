@@ -18,13 +18,14 @@ import {
   RefreshCw,
 } from "lucide-react";
 import {
+  getBaseUrl,
   chatAssistant,
   approveAssistantAction,
   type AssistantChatResponse,
 } from "@/lib/api";
 import { formatINR } from "./utils";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// getBaseUrl imported from @/lib/api
 
 interface MessageItem {
   id: string;
@@ -386,7 +387,7 @@ export function AssistantTab() {
                       </div>
                       {m.structured_card.data?.pdf_path && (
                         <a
-                          href={`${API_BASE}/api/v1/invoices/${m.structured_card.data?.invoice_id}/pdf`}
+                          href={`${getBaseUrl()}/api/v1/invoices/${m.structured_card.data?.invoice_id}/pdf`}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-500 px-3 py-2 text-xs font-semibold text-white shadow-md transition"

@@ -1,9 +1,11 @@
 "use client";
+
+import { getBaseUrl } from "@/lib/api";
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
 
 function StripeCallbackState({
   status,
@@ -67,7 +69,7 @@ function StripeCallbackContent() {
     }
 
     // Exchange code for token via backend
-    fetch(`${BASE}/integrations/stripe/callback?code=${encodeURIComponent(code)}`)
+    fetch(`${getBaseUrl()}/integrations/stripe/callback?code=${encodeURIComponent(code)}`)
       .then(res => {
         if (!res.ok) throw new Error(`Backend returned ${res.status}`);
         return res.json();

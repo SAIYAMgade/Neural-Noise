@@ -17,6 +17,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import {
+  getBaseUrl,
   getInvoices,
   getClients,
   createInvoiceDraft,
@@ -29,7 +30,7 @@ import {
 } from "@/lib/api";
 import { formatINR, formatDate, STATUS_STYLES } from "./utils";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// getBaseUrl imported from @/lib/api
 
 const GST_RATES = [0, 5, 12, 18, 28];
 
@@ -332,7 +333,7 @@ export function InvoicesTab() {
                         <div className="flex items-center justify-end gap-1.5">
                           {/* PDF Download Button */}
                           <a
-                            href={`${API_BASE}/api/v1/invoices/${inv.id}/pdf`}
+                            href={`${getBaseUrl()}/api/v1/invoices/${inv.id}/pdf`}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:bg-zinc-950 transition shadow-xs"

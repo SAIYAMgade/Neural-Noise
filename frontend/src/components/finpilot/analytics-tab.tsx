@@ -1,3 +1,4 @@
+import { getBaseUrl } from "@/lib/api";
 "use client";
 
 import React, { useState } from "react";
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import { startDemo, startAnalysis } from "@/lib/api";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// getBaseUrl imported from @/lib/api
 
 const FEATURES = [
   {
@@ -63,7 +64,7 @@ export function AnalyticsTab() {
         company_name: companyName,
         sector: "saas_productivity",
       });
-      await fetch(`${API_BASE}/demo/async?${params}`, { method: "POST" });
+      await fetch(`${getBaseUrl()}/demo/async?${params}`, { method: "POST" });
       router.push(`/run/${runId}`);
     } catch (err: any) {
       alert(`Demo pipeline trigger failed: ${err.message || "Error"}`);
@@ -89,7 +90,7 @@ export function AnalyticsTab() {
       form.append("company_name", companyName);
       form.append("sector", "saas_productivity");
 
-      await fetch(`${API_BASE}/analyze/async`, { method: "POST", body: form });
+      await fetch(`${getBaseUrl()}/analyze/async`, { method: "POST", body: form });
       router.push(`/run/${runId}`);
     } catch (err: any) {
       alert(`Analysis failed: ${err.message || "Error"}`);

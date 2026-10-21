@@ -13,7 +13,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 function getApiBase(): string {
   if (process.env.NEXT_PUBLIC_API_URL) return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
-  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host !== "localhost" && host !== "127.0.0.1") {
+      return "https://neural-noise.onrender.com";
+    }
+  }
+  if (process.env.NODE_ENV === "production") {
     return "https://neural-noise.onrender.com";
   }
   return "http://localhost:8000";
@@ -21,14 +27,17 @@ function getApiBase(): string {
 
 function getWsBase(): string {
   if (process.env.NEXT_PUBLIC_WS_URL) return process.env.NEXT_PUBLIC_WS_URL.replace(/\/$/, "");
-  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host !== "localhost" && host !== "127.0.0.1") {
+      return "wss://neural-noise.onrender.com";
+    }
+  }
+  if (process.env.NODE_ENV === "production") {
     return "wss://neural-noise.onrender.com";
   }
   return "ws://localhost:8000";
 }
-
-const API_BASE = getApiBase();
-const WS_BASE = getWsBase();
 
 export interface StreamEvent {
   event_id: string;
@@ -166,7 +175,7 @@ export function usePipelineStream(runId: string | null): PipelineStreamState {
         return;
       }
       try {
-        const res = await fetch(`${API_BASE}/runs/${rId}/status`, { cache: "no-store" });
+        const res = await fetch(`${getApiBase()}/runs/${rId}/status`, { cache: "no-store" });
         if (!res.ok) return;
         const json = await res.json() as {
           steps: Array<{ id: string; label: string; detail: string }>;
@@ -187,7 +196,7 @@ export function usePipelineStream(runId: string | null): PipelineStreamState {
 
   const hydrateFromStatus = useCallback(async (rId: string) => {
     try {
-      const res = await fetch(`${API_BASE}/runs/${rId}/status`, { cache: "no-store" });
+      const res = await fetch(`${getApiBase()}/runs/${rId}/status`, { cache: "no-store" });
       if (!res.ok) return;
       const json = await res.json() as {
         steps: Array<{ id: string; label: string; detail: string }>;
@@ -204,7 +213,7 @@ export function usePipelineStream(runId: string | null): PipelineStreamState {
   const connect = useCallback((rId: string) => {
     if (wsRef.current?.readyState === WebSocket.OPEN) return;
 
-    const ws = new WebSocket(`${WS_BASE}/ws/pipeline/${rId}`);
+    const ws = new WebSocket(`${getWsBase()}/ws/pipeline/${rId}`);
     wsRef.current = ws;
 
     // If WS doesn't connect within 5 s, fall back to polling.

@@ -15,6 +15,7 @@ import {
   Building,
 } from "lucide-react";
 import {
+  getBaseUrl,
   getClients,
   getClientLedger,
   createClient,
@@ -23,7 +24,7 @@ import {
 } from "@/lib/api";
 import { formatINR, formatDate, STATUS_STYLES } from "./utils";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// getBaseUrl imported from @/lib/api
 
 const GST_STATE_NAMES: Record<string, string> = {
   "01": "Jammu & Kashmir",
@@ -465,7 +466,7 @@ export function ClientsTab() {
                           {inv.status}
                         </span>
                         <a
-                          href={`${API_BASE}/api/v1/invoices/${inv.id}/pdf`}
+                          href={`${getBaseUrl()}/api/v1/invoices/${inv.id}/pdf`}
                           target="_blank"
                           rel="noreferrer"
                           className="rounded-lg border border-zinc-800 p-1 text-zinc-400 hover:bg-zinc-800 transition"

@@ -6,8 +6,8 @@ const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "AI CFO Agent",
-  description: "Autonomous multi-agent financial intelligence for startups",
+  title: "IntentFlow AI — Build Intelligent Experiences. Orchestrate AI. Measure What Works.",
+  description: "Full-stack AI agent platform for website personalization, A/B experimentation, LangGraph orchestration, deterministic brand guardrails, and financial operations.",
   icons: {
     icon: "/favicon.svg",
   },

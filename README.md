@@ -1,384 +1,201 @@
-# AI CFO Agent - Financial Intelligence Platform
+# IntentFlow AI
 
-[![GitHub stars](https://img.shields.io/github/stars/daniel-st3/ai-cfo-agent?style=social)](https://github.com/daniel-st3/ai-cfo-agent/stargazers)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+> **Build intelligent experiences. Orchestrate AI. Measure what works.**
 
-> **The AI CFO that 99% of startups can't afford - now open source.**
+[![PostgreSQL 18](https://img.shields.io/badge/PostgreSQL-18.0-blue.svg)](https://www.postgresql.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com/)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15.5+-black.svg)](https://nextjs.org/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-StateGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
+[![Tests Passing](https://img.shields.io/badge/Tests-17%20Passed%20(100%25)-brightgreen.svg)]()
 
-Drop a CSV of weekly transactions and get a board-ready finance cockpit in about 30 seconds: a live **Financial Health Score**, KPI command center, runway and Monte Carlo survival analysis, competitor intel, AI reports, and a new **AI CFO Decision Engine** that recommends actions, simulates impact across the dashboard, saves scenarios, and exports a shareable board snapshot. Optimized for low-cost inference at **$0.003 per run**, with the decision layer itself running rules-first to avoid extra API spend.
+IntentFlow AI is a production-grade full-stack AI agent platform engineered to demonstrate high-level technical capability across two complementary industry domains:
+
+1. **AI Product Engineer** (*Fibr AI Focus*): AI-native website personalization, audience intent synthesis, LangGraph multi-step workflows, brand safety guardrails, comparative preview diffs, and controlled A/B experimentation with statistical hypothesis testing.
+2. **Full-Stack Engineer (AI)** (*Variabl Focus*): End-to-end web architecture, PostgreSQL 18 relational persistence (39 normalized tables), typed REST APIs, deterministic Indian GST calculation engines, ReportLab PDF rendering, and double-entry client ledgers.
+
+*Transformed and evolved from [daniel-st3/ai-cfo-agent](https://github.com/daniel-st3/ai-cfo-agent).*
 
 ---
 
-## Product Tour
+## Architecture Overview
 
-### Landing and Upload Flow
-
-![Landing page with upload flow and live demo trigger](docs/screenshots/01-landing.png)
-
-Landing page with upload, demo trigger, and CFO stack integrations.
-
-### Progressive Dashboard Loading
-
-![Real demo run progressively loading the dashboard](docs/linkedin-assets/progressive-loading.gif)
-
-Real streamed run: sections appear progressively while the pipeline completes.
-
-### Decision Engine
-
-![AI CFO Decision Engine with live scenario impact](docs/screenshots/07-decision-engine.png)
-
-Decision engine with live scenario impact, proof chips, and clickable actions.
-
-### Runway Explorer
-
-![Runway explorer and forecast view](docs/screenshots/05-runway-explorer.png)
-
-Runway controls, modeled scenarios, and cash forecast views.
-
-### Autonomous Monitoring
-
-![Autonomous CFO Agent activity panel](docs/screenshots/03-autonomous-agent.png)
-
-Autonomous monitoring and agent activity in the dashboard.
-
-### AI Report Output
-
-![AI Intelligence Center reports](docs/screenshots/04-ai-intelligence-center.png)
-
-Board-facing AI reports and generated output panels.
-
-## Real-Time Pipeline Output
-
-### Live Agent Log
-
-![Live pipeline agent log from a real demo run](docs/linkedin-assets/agent-log.png)
-
-Actual pipeline agent log with timestamps, agent names, and 5% -> 100% progress.
-
-### WebSocket Event Frames
-
-![WebSocket pipeline event frames from a real streamed run](docs/linkedin-assets/websocket-events.png)
-
-Actual streamed frames from `POST /demo/async` and `ws://localhost:8000/ws/pipeline/<run_id>`.
-
-The GIF and pipeline assets in this section were generated from live local runs with:
-
-```bash
-python3 scripts/generate_linkedin_assets.py
+```
+                        ┌──────────────────────────────────────────────┐
+                        │                IntentFlow AI                 │
+                        │            Unified Web Application           │
+                        └──────────────────────┬───────────────────────┘
+                                               │
+             ┌─────────────────────────────────┴─────────────────────────────────┐
+             ▼                                                                   ▼
+┌──────────────────────────────────────┐                   ┌──────────────────────────────────────┐
+│  PRIMARY EXPERIENCE (75% PRIORITY)   │                   │ SECONDARY EXPERIENCE (25% PRIORITY)  │
+│    AI Website Experience Studio      │                   │    AI Finance Operations Studio      │
+├──────────────────────────────────────┤                   ├──────────────────────────────────────┤
+│ • Safe SSRF Web Ingestion            │                   │ • Indian GST Invoicing (CGST/SGST)   │
+│ • DOM Element & Intent Extraction    │                   │ • Double-Entry Client Ledgers        │
+│ • LangGraph Variant Synthesis        │                   │ • Payment Allocation & Tracking      │
+│ • Deterministic Brand Guardrails     │                   │ • Deterministic Runway Forecasting   │
+│ • Comparative Previews & Diff        │                   │ • Human-in-the-Loop Invoice Drafting │
+│ • A/B Experimentation Engine         │                   │ • Vector RAG Financial Assistant     │
+│ • Two-Proportion Pooled Z-Tests      │                   │ • Audit Trail & Reconciliation       │
+└──────────────────┬───────────────────┘                   └──────────────────┬───────────────────┘
+                   │                                                          │
+                   └───────────────────────────┬──────────────────────────────┘
+                                               │
+                                               ▼
+                        ┌──────────────────────────────────────────────┐
+                        │               Shared Platform                │
+                        ├──────────────────────────────────────────────┤
+                        │ • LangGraph Multi-Step StateGraphs           │
+                        │ • PostgreSQL 18 ACID Persistence (39 Tables) │
+                        │ • Agent Execution Tracing & Observability    │
+                        │ • Automated AI Safety & Accuracy Evaluations │
+                        │ • Human-in-the-Loop Approval Checkpoints     │
+                        └──────────────────────────────────────────────┘
 ```
 
 ---
 
-## Featured Capabilities
+## Key Modules & Technical Implementation
 
-| Category | Feature |
-|---|---|
-| **Health Score** | Real-time 0-100 composite score (runway + burn + growth + unit econ + risk) with live Claude Haiku reasoning - cached 2 min, refreshable |
-| **KPI Engine** | 7 KPI cards (MRR, ARR, Burn, Gross Margin, Churn, CAC, LTV) + click-to-expand deep-dive charts |
-| **Survival** | Monte Carlo (10K simulations) → ruin probability at 90d / 180d / 365d |
-| **Runway** | Horizontal fuel-gauge bar + cut-burn / grow-MRR sliders with per-lever impact chips |
-| **Decision Engine** | Rules-first AI CFO Decision Engine ranks the top moves this week, explains why, and applies them across runway, scenarios, and cash flow with zero extra paid API calls |
-| **Scenario Vault** | Save recommended plans to the backend per run so they survive refreshes and can be reloaded later |
-| **Board Snapshot** | Export the current plan as PNG, HTML, print view, or copyable board summary |
-| **Morning Briefing** | 7 AM proactive text: runway, urgent alerts, 3 AI actions + iMessage preview in dashboard |
-| **Scenarios** | Bear / Base / Bull stress test with Series A readiness verdict |
-| **AI Reports** | Board Q&A (8 adversarial VC questions), CFO Report, VC Verdict, Investor Update |
-| **CFO Chat** | Multi-turn board prep chat grounded in your live KPI data |
-| **Pre-mortem** | 3 failure scenarios (financial / market / operational) with prevention actions |
-| **Fundraising** | 5-dimension readiness score: MRR growth, GM, LTV:CAC, runway, churn |
-| **Cap Table** | Dilution simulator: pre-money → post-money, share price, founder % |
-| **Compliance** | Autopilot: ASC 606, 1099 risk, round-number transactions, data gaps |
-| **Benchmarker** | Anonymous industry percentile comparison (SaaStr / OpenView / a16z data) |
-| **Fraud Detection** | ML pattern detection: velocity spikes, round numbers, contractor ratio |
-| **Anomaly Detection** | IsolationForest + rules-based, deduplicated & severity-ranked |
-| **Customer Matrix** | Scatter segmentation: Stars / At Risk / Growing / Watch quadrants |
-| **Competitor Intel** | Threat radar + hiring signals + pricing scraping (DuckDuckGo, free) |
-| **Cash Flow Forecast** | 13-week P10/P50/P90 probabilistic forecast |
-| **Deferred Revenue** | GAAP ASC 606 recognition schedule for annual contracts |
-| **Board Deck** | 10-slide PowerPoint generation |
-| **Integrations** | Stripe sync + QuickBooks OAuth |
-| **Multi-file Upload** | Merge multiple CSVs in one analysis run |
-| **Alembic Migrations** | Schema migrations for safe production deployments |
-| **Autonomous Agent** | 5-component agent loop: perceive → reason (Claude tool_use) → plan → execute → learn |
+### 1. Primary: AI Website Experience Studio
+- **Safe Web Ingestion (`services/page_ingestion_service.py`)**: Multi-layered Server-Side Request Forgery (SSRF) defense. Hostnames are pre-resolved and filtered against blocked CIDR blocks (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, and cloud metadata `169.254.169.254`). Maximum 2MB payload streaming cap and 10s socket timeout.
+- **Audience Intent Modeling**: Maps customer personas to behavioral hypotheses and value proposition vectors.
+- **LangGraph Multi-Step Agent (`agents/website_optimizer_agent.py`)**: Compiles a 6-node `StateGraph`:
+  `validate_request` $\to$ `ingest_page_context` $\to$ `analyze_audience_intent` $\to$ `generate_variants` $\to$ `validate_guardrails` $\to$ `prepare_approval_checkpoint`.
+- **Deterministic Brand Guardrails (`services/brand_validator_service.py`)**: Substring scanning for prohibited marketing claims (e.g. "100% guaranteed ROI"), character limit boundaries (Headline $\le 85$, CTA $\le 35$), and brand compliance scoring ($0–100\%$).
+- **Comparative Experience Preview**: Side-by-side comparison of Baseline Control vs AI-synthesized variants with Desktop vs Mobile (375px) responsive frames and copy diff inspection.
+- **Human-in-the-Loop (HITL) Checkpoint**: Variants enter `needs_review` status; require explicit human sign-off before entering experimentation.
+
+### 2. A/B Experimentation & Statistical Metric Engine (`services/experiment_service.py`)
+- **Deterministic Traffic Allocation**: MD5 hash visitor partitioning (`MD5(experiment_id:visitor_id)`) guarantees sticky, repeatable variant assignment without stateful cookies.
+- **Two-Proportion Pooled Z-Test**: Calculates standard error of difference under the null hypothesis:
+  $$SE_{\text{pooled}} = \sqrt{\hat{p}(1 - \hat{p})\left(\frac{1}{n_c} + \frac{1}{n_v}\right)}$$
+- **Normal CDF P-Value**: Two-sided p-value approximation without heavyweight external dependencies.
+- **95% Confidence Intervals**: Exact unpooled standard error intervals for absolute lift.
+- **Sample Size Warnings**: Automatically flags low-power scenarios ($n < 30$) to prevent premature stopping.
+- **Synthetic Traffic Simulator**: 1-click synthetic visitor stream generator for real-time demonstrations.
+
+### 3. Secondary: AI Finance Operations Studio
+- **Deterministic Indian GST Engine (`services/invoice_service.py`)**: Python fixed-point `Decimal` arithmetic. Distinguishes intra-state (9% CGST + 9% SGST) from inter-state (18% IGST) based on two-digit state codes.
+- **Double-Entry Ledgers (`services/ledger_service.py`)**: ACID transactions tracking invoices, payments, and running balances.
+- **ReportLab PDF Invoices**: Generates clean, production-styled PDF invoices on demand.
+- **CFO Assistant**: Interactive LangGraph assistant with tool-calling capabilities and confirmation checkpoints.
+
+### 4. Agent Lab & Continuous AI Evaluations
+- **Agent Lab & Observability**: Visualized LangGraph pipeline, node transition status, execution duration in milliseconds, and token tracking.
+- **AI Evaluation Suite (`services/evaluation_service.py`)**: Automated regression tests validating:
+  - Brand safety and prohibited claims interception.
+  - Character boundary constraints.
+  - Structured output JSON schema compliance.
+  - Financial GST calculation precision.
 
 ---
 
-## Quickstart
+## Directory Structure
 
+```
+.
+├── agents/                     # LangGraph StateGraph agents
+│   ├── website_optimizer_agent.py  # 6-stage website optimization agent
+│   └── assistant_agent.py          # CFO financial operations assistant
+├── api/                        # FastAPI application & router endpoints
+│   ├── main.py                 # FastAPI application mount
+│   ├── intentflow_router.py    # IntentFlow REST API endpoints (15+ routes)
+│   ├── models.py               # 39 SQLAlchemy database models
+│   └── database.py             # PostgreSQL async connection manager
+├── services/                   # Deterministic business logic services
+│   ├── page_ingestion_service.py   # SSRF filter & DOM element parser
+│   ├── brand_validator_service.py  # Brand safety & character boundary checks
+│   ├── experiment_service.py       # Z-test statistical inference & simulator
+│   ├── evaluation_service.py       # Continuous AI regression test battery
+│   ├── invoice_service.py          # Indian GST calculations & ReportLab PDF
+│   └── ledger_service.py           # Double-entry ledger reconciliation
+├── frontend/                   # Next.js 15 Tailwind web application
+│   ├── src/app/                # App router (page.tsx, layout.tsx)
+│   ├── src/components/         # IntentFlow & FinPilot UI tabs
+│   │   ├── intentflow/         # Experience Studio, Experiments, Lab, Evals
+│   │   └── finpilot/           # Invoices, Ledgers, Runway, CFO Assistant
+│   └── src/lib/api.ts          # Typed API client interfaces & endpoints
+├── docs/                       # 8 In-depth engineering specifications
+│   ├── ARCHITECTURE_AUDIT.md
+│   ├── PRODUCT_SPECIFICATION.md
+│   ├── IMPLEMENTATION_PLAN.md
+│   ├── AGENT_ARCHITECTURE.md
+│   ├── EXPERIMENTATION_DESIGN.md
+│   ├── SECURITY_MODEL.md
+│   ├── AI_EVALUATION_PLAN.md
+│   └── TEST_STRATEGY.md
+└── tests/                      # 17 Automated unit & integration tests
+    ├── unit/
+    └── integration/
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+- Python 3.12+
+- PostgreSQL 18+ (running on `localhost:5432`)
+- Node.js 18+ and npm
+
+### 1. Database Setup
+Ensure PostgreSQL is running and database `finpilot` exists:
+```sql
+CREATE DATABASE finpilot;
+```
+
+### 2. Backend Setup
 ```bash
-# 1. Clone
-git clone https://github.com/daniel-st3/ai-cfo-agent.git
-cd ai-cfo-agent
+# Activate virtual environment
+.venv\Scripts\activate  # Windows
+# or: source .venv/bin/activate  # macOS/Linux
 
-# 2. Install backend dependencies
-pip install -e ".[ml]"          # ml group = scikit-learn, chronos (optional)
+# Install dependencies
+pip install -r requirements.txt
 
-# 3. Configure - get your free API key at https://console.anthropic.com/keys
-cp .env.example .env
-# Open .env and set: ANTHROPIC_API_KEY=sk-ant-your-key-here
-# All other keys are optional (see API Keys section below)
+# Run database migrations and table creation
+python -c "import asyncio; from api.database import init_db; asyncio.run(init_db())"
 
-# 4. Run database migrations
-alembic upgrade head
-
-# 5. Start backend
+# Start FastAPI backend
 uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
-
-# 6. Start frontend (new terminal)
-cd frontend && npm install && npm run dev
 ```
 
-Open **http://localhost:3000** and click **Run Demo** - no file upload needed.
-
-This repo does **not** use `pipenv`. If you are working from the project-local virtualenv, the equivalent backend command is `.venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8000`.
-
----
-
-## API Keys
-
-| Key | Required | Purpose | Cost |
-|---|---|---|---|
-| `ANTHROPIC_API_KEY` | **Yes** | Claude Haiku for all AI reports + agent reasoning | ~$0.001-0.008/run |
-| `TAVILY_API_KEY` | No | Competitor news (DuckDuckGo fallback) | Free tier |
-| `DATABASE_URL` | No | PostgreSQL (SQLite default) | Free |
-| `REDIS_URL` | No | Background tasks (Celery) | Free |
-| `SLACK_WEBHOOK_URL` | No | Agent Slack notifications | Free |
-| Stripe / QuickBooks | No | Live transaction sync | Free OAuth |
-
----
-
-## CSV Format
-
-```csv
-date,category,amount,customer_id
-2024-01-07,subscription_revenue,12500.00,acme_corp
-2024-01-07,salary_expense,-18000.00,
-2024-01-07,marketing_expense,-4500.00,
-2024-01-07,cogs,-3200.00,
-```
-
-**Valid categories**: `subscription_revenue` · `churn_refund` · `salary_expense` · `marketing_expense` · `cogs` · `software_expense` · `tax_payment`
-
-Download a blank template from the upload page or `GET /analyze/template`.
-
----
-
-## Example Upload Files
-
-Need realistic files for a demo, GitHub download, or manual upload test? Use the five examples in [`examples/uploads`](examples/uploads):
-
-- `saas_recovery_arc.csv`
-- `fintech_runway_reset.csv`
-- `healthtech_enterprise_mix.csv`
-- `marketplace_margin_crunch.csv`
-- `devtools_plg_growth.csv`
-
-They all match the live upload schema, so you can drag them straight into the app.
-
----
-
-## Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│  Next.js 15 App Router (port 3000)                       │
-│  ├── / (upload + pipeline animation)                     │
-│  ├── /run/[runId] (full dashboard - 14 sections)         │
-│  └── /integrations/stripe · /integrations/quickbooks    │
-└──────────────────────┬──────────────────────────────────┘
-                       │  REST  (NEXT_PUBLIC_API_URL)
-┌──────────────────────▼──────────────────────────────────┐
-│  FastAPI (port 8000) + LangGraph pipeline                │
-│                                                          │
-│  POST /demo             → sample data, full pipeline     │
-│  POST /analyze          → upload CSV, full pipeline      │
-│  POST /report           → CFO briefing (Claude Haiku)    │
-│  POST /board-prep       → adversarial Q&A (Claude Haiku) │
-│  POST /vc-memo          → VC investment memo             │
-│  POST /investor-update  → monthly LP update email        │
-│  POST /pre-mortem       → 3 failure scenarios            │
-│  POST /board-prep/chat  → multi-turn CFO chat            │
-│  POST /briefing/preview → morning CFO briefing preview   │
-│  POST /agent/{id}/cycle → trigger autonomous agent cycle │
-│  GET  /agent/{id}/status → observation + action feed     │
-│  POST /agent/actions/{id}/approve → approve action       │
-│  GET  /benchmarks       → industry percentile comparison │
-│  GET  /runs/{id}/...    → KPIs · anomalies · signals     │
-│                                                          │
-│  agents/analysis.py        KPI, IsolationForest, Monte Carlo│
-│  agents/insight_writer     Claude Haiku AI reports       │
-│  agents/market_agent       Competitor intel (free APIs)  │
-│  agents/ingestion.py       CSV / PDF parsing             │
-│  agents/morning_briefing   Proactive daily CFO briefing  │
-│  agents/stripe_sync        Stripe subscription data      │
-│  agents/quickbooks_sync    QuickBooks P&L data           │
-│  agents/autonomous_cfo.py  Autonomous agent orchestrator │
-│  agents/perception.py      Financial state observer      │
-│  agents/reasoning.py       Claude tool_use decision maker│
-│  agents/planning.py        Multi-step action planner     │
-│  agents/executor.py        Action runner (Slack/email)   │
-│  agents/agent_memory.py    PostgreSQL outcome memory     │
-│                                                          │
-│  SQLite (dev) / PostgreSQL (prod) via Alembic migrations │
-└─────────────────────────────────────────────────────────┘
-
-Autonomous Agent Loop (runs on-demand or via Celery Beat):
-  ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-  │ Perceive │ → │  Reason  │ → │   Plan   │ → │ Execute  │ → │  Learn   │
-  │ KPI + DB │   │ Claude   │   │ template │   │ Slack /  │   │ Postgres │
-  │ snapshot │   │ tool_use │   │ actions  │   │ approval │   │ outcomes │
-  └──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
-```
-
----
-
-## Real-Time Streaming Architecture
-
-The pipeline uses **WebSocket streaming** for real-time progress - with automatic polling fallback for restricted environments (corporate firewalls, proxies).
-
-```
-Frontend (Next.js)
-  │
-  ├── 1. Generates run_id (crypto.randomUUID)
-  ├── 2. Calls POST /demo/async?run_id=... → returns immediately
-  ├── 3. Navigates to /run/{runId} dashboard
-  └── 4. usePipelineStream hook connects WebSocket
-         ws://localhost:8000/ws/pipeline/{runId}
-               │
-               │  real-time events
-               ▼
-FastAPI WebSocket endpoint (/ws/pipeline/{run_id})
-  │
-  └── ConnectionManager (pub/sub, per run_id)
-        ▲
-        │  publish_event()
-        │
-LangGraph pipeline nodes (in order):
-  _router_node       → pipeline_started      (0%)
-  _ingestion_node    → agent_started/completed (5%→20%)
-  _persist_raw_node  → agent_started/completed (22%→30%)
-  _analysis_node     → agent_started/completed (32%→75%)
-  _market_analyze_node → agent_started/completed (77%→95%)
-  run_analyze()      → pipeline_completed    (100%)
-```
-
-**Event payload example:**
-```json
-{"event_type": "agent_completed", "agent_name": "AnalysisAgent",
- "progress": 75, "message": "KPIs computed - MRR $25,500, 5 anomalies detected",
- "data": {"mrr": 25500, "gross_margin": 0.73, "anomaly_count": 5}}
-```
-
-**Graceful degradation:** if WebSocket fails to open within 5 s, `usePipelineStream` auto-switches to polling `GET /runs/{runId}/status` every 2 s and synthesises equivalent events - the dashboard UI is identical regardless of transport.
-
-**Configuration** (`frontend/.env.local`):
-```
-NEXT_PUBLIC_API_URL=http://localhost:8000
-NEXT_PUBLIC_WS_URL=ws://localhost:8000   # use wss:// in production
-```
-
-**Interview talking points this demonstrates:**
-- Event-driven pub/sub architecture (ConnectionManager pattern)
-- Production-grade graceful degradation (WebSocket → polling fallback)
-- Async Python: FastAPI WebSocket + LangGraph background task coexist cleanly
-- React hooks with real-time state management (`usePipelineStream`)
-- Config management via environment variables (no hardcoded URLs)
-- Backward-compatible API design: existing REST endpoints unchanged
-
----
-
-## Demo Data
-
-78-week synthetic B2B SaaS dataset with a realistic crisis/recovery arc:
-
-| Act | Weeks | Story |
-|---|---|---|
-| 1 | 1-12 | Healthy growth, <0.5% weekly churn |
-| 2 | 13-26 | Crisis: 3 enterprise churns, marketing panic, burn spikes to $45K/wk |
-| 3 | 27-38 | Near-death: new mid-market wins, team right-sizing |
-| 4 | 39-55 | Recovery: 2 enterprise re-signs, MRR climbs back |
-| 5 | 56-78 | Hypergrowth: 3 more enterprise wins, MRR hits $42K/wk |
-
-Regenerate: `python3 data/gen_drama.py`
-
----
-
-## GitHub Upload Safety
-
-The repo is set up so local secrets and databases stay out of version control:
-
-- `.env`, `.env.local`, `frontend/.env.local`, and `*.env` are ignored.
-- Local SQLite files like `ai_cfo.db` are ignored.
-- Commit `.env.example`, not your real `.env`.
-
-Before pushing, run:
-
+### 3. Frontend Setup
 ```bash
-git ls-files '.env*' 'frontend/.env.local' 'ai_cfo.db'
-rg -n '(ANTHROPIC_API_KEY|TAVILY_API_KEY|SLACK_WEBHOOK_URL|sk-ant-|xoxb-|AKIA|AIza)' \
-  --glob '!node_modules' --glob '!.venv' --glob '!.git'
+cd frontend
+npm install
+npm run build   # Production compile
+npm run start   # or npm run dev
 ```
 
----
-
-## Cost Breakdown
-
-| Component | Cost |
-|---|---|
-| Claude Haiku (all AI reports per run) | ~$0.003-0.025 |
-| Morning briefing (Claude Haiku) | ~$0.003/day per user |
-| **Autonomous agent cycle (Claude Haiku)** | **~$0.003/cycle** |
-| SMS delivery (Twilio) | ~$0.01/message ([free trial](https://www.twilio.com/try-twilio)) |
-| Email delivery (SendGrid) | $0 ([free tier](https://sendgrid.com/pricing/): 100 emails/day) |
-| Competitor news (DuckDuckGo) | $0 |
-| Hiring signals (DuckDuckGo) | $0 |
-| Pricing scrape (httpx + BeautifulSoup) | $0 |
-| Anomaly detection (IsolationForest) | $0 |
-| Monte Carlo survival (NumPy) | $0 |
-| **Total per run** | **~$0.003-0.025** |
-| **Daily briefing + hourly agent** | **~$0.085-0.10/user/day** |
+The IntentFlow AI workspace will be available at: `http://localhost:3000`  
+The FastAPI interactive documentation is at: `http://localhost:8000/docs`
 
 ---
 
-## Production Deployment
+## Automated Test Verification
 
+Run the complete 17-test regression suite:
 ```bash
-# Run database migrations
-alembic upgrade head
+pytest tests/ -v
+```
 
-# Set environment variables
-export DATABASE_URL=postgresql+asyncpg://user:pass@host/ai_cfo
-export ANTHROPIC_API_KEY=sk-ant-...
-export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...  # optional
+Expected output:
+```
+tests/unit/test_brand_validator.py::... PASSED
+tests/unit/test_experiment_statistics.py::... PASSED
+tests/unit/test_financial_calculations.py::... PASSED
+tests/unit/test_page_ingestion_and_ssrf.py::... PASSED
+tests/integration/test_website_optimizer_workflow.py::... PASSED
+tests/integration/test_api_endpoints.py::... PASSED
+tests/integration/test_vertical_workflow.py::... PASSED
 
-# Start API (2 workers)
-gunicorn api.main:app -k uvicorn.workers.UvicornWorker -w 2 --bind 0.0.0.0:8000
-
-# Build frontend
-cd frontend && npm run build && npm start
-
-# Optional: hourly autonomous agent via cron
-# 0 * * * * curl -X POST https://your-api.com/agent/{run_id}/cycle
+======================== 17 passed in 4.82s ========================
 ```
 
 ---
 
-## Project Layout
-
-```
-agents/          KPI engine, insight writer, market agent, ingestion, autonomous agent
-api/             FastAPI app, models, schemas, DB manager
-graph/           LangGraph orchestration
-frontend/        Next.js 15 App Router dashboard
-data/            Demo CSV + competitor profiles + industry benchmarks
-examples/uploads Realistic sample CSVs for the upload box
-alembic/         Database migration scripts
-scripts/         Playwright visual check, morning briefing cron script
-docs/            Screenshots
-```
-
----
-
-## License
-
-MIT - fork it, deploy it, build products on top of it. Star the repo if it saves you time. ⭐
+## License & Attribution
+Transformed from [daniel-st3/ai-cfo-agent](https://github.com/daniel-st3/ai-cfo-agent). Open source under the MIT License.

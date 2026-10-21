@@ -71,6 +71,8 @@ from agents.quickbooks_sync import QuickBooksIngestionAgent
 from agents.stripe_sync import StripeIngestionAgent
 from graph.cfo_graph import CFOGraphRunner, build_graph_runner
 from api.streaming import manager as ws_manager
+from api.finpilot_router import router as finpilot_router
+from api.intentflow_router import router as intentflow_router
 
 _PROJECT_ROOT = Path(__file__).parent.parent
 
@@ -198,11 +200,11 @@ def create_app(
         await close_db()
 
     app = FastAPI(
-        title="AI CFO Agent API",
+        title="IntentFlow AI — Website Personalization & Experimentation Platform",
         version=_load_app_version(),
         description=(
             "Autonomous multi-agent financial analyst - Survival Score, Board Interrogation, "
-            "and Scenario Stress Testing for startups that can't afford a real CFO."
+            "Build intelligent experiences. Orchestrate AI. Measure what works."
         ),
         lifespan=lifespan,
     )
@@ -214,6 +216,9 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    app.include_router(intentflow_router, prefix="/api/v1")
+    app.include_router(finpilot_router, prefix="/api/v1")
 
     # ── Root ─────────────────────────────────────────────────────────────────
 

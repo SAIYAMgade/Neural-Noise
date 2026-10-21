@@ -446,3 +446,681 @@ export async function getHealthScore(
     `/runs/${runId}/health-score?refresh=${forceRefresh}`,
   );
 }
+
+
+// ---------------------------------------------------------------------------
+// FinPilot AI Financial Operations APIs
+// ---------------------------------------------------------------------------
+
+export interface ClientData {
+  id: string;
+  name: string;
+  legal_name?: string;
+  gstin?: string;
+  state_code?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  is_active: boolean;
+  payment_terms_days: number;
+  created_at: string;
+}
+
+export interface ClientLedgerData {
+  client_id: string;
+  client_name: string;
+  total_invoiced: number;
+  total_paid: number;
+  total_due: number;
+  invoices_count: number;
+  overdue_count: number;
+  invoices: InvoiceData[];
+}
+
+export interface InvoiceLineItemData {
+  id?: string;
+  description: string;
+  hsn_sac?: string;
+  quantity: number;
+  unit_price: number;
+  discount_rate?: number;
+  gst_rate: number;
+  taxable_amount?: number;
+  cgst_amount?: number;
+  sgst_amount?: number;
+  igst_amount?: number;
+  total_amount?: number;
+}
+
+export interface InvoiceData {
+  tax_type?: "intra_state" | "inter_state" | string;
+  invoice_date?: string;
+  cgst_amount?: string | number;
+  sgst_amount?: string | number;
+  igst_amount?: string | number;
+  total_tax?: string | number;
+  grand_total?: string | number;
+  amount_due?: string | number;
+  pdf_path?: string | null;
+  id: string;
+  invoice_number: string;
+  status: "draft" | "issued" | "partially_paid" | "paid" | "overdue" | "cancelled";
+  issue_date: string;
+  due_date: string;
+  client_id: string;
+  client_name?: string;
+  is_interstate: boolean;
+  subtotal: number;
+  discount_total: number;
+  cgst_total: number;
+  sgst_total: number;
+  igst_total: number;
+  total_amount: number;
+  amount_paid: number;
+  balance_due: number;
+  notes?: string;
+  pdf_url?: string;
+  line_items: InvoiceLineItemData[];
+  created_at: string;
+}
+
+export interface PaymentData {
+  id: string;
+  payment_number: string;
+  client_id: string;
+  client_name?: string;
+  amount: number;
+  payment_date: string;
+  payment_method: string;
+  reference_number?: string;
+  notes?: string;
+  unallocated_amount: number;
+  created_at: string;
+  allocations?: {
+    id: string;
+    invoice_id: string;
+    invoice_number?: string;
+    amount: number;
+  }[];
+}
+
+export interface ExpenseData {
+  id: string;
+  category: string;
+  vendor?: string;
+  amount: number;
+  expense_date: string;
+  payment_method?: string;
+  tax_amount?: number;
+  gstin?: string;
+  is_tax_deductible: boolean;
+  notes?: string;
+  created_at: string;
+}
+
+export interface OverviewMetricsData {
+  total_invoiced: number;
+  total_collected: number;
+  outstanding_receivables: number;
+  overdue_amount: number;
+  total_expenses: number;
+  net_cash_flow: number;
+  clients_count: number;
+  active_invoices_count: number;
+  overdue_invoices_count: number;
+}
+
+export interface AssistantChatResponse {
+  conversation_id: string;
+  message: string;
+  status: "completed" | "waiting_approval" | "clarification_needed" | "error";
+  structured_card?: {
+    type: "invoice_draft" | "approval_gate" | "invoice_issued" | "overdue_summary" | "financial_summary" | "dossier_summary";
+    data: any;
+  };
+  approval_request?: {
+    id: string;
+    action_type: string;
+    parameters: any;
+    status: string;
+  };
+}
+
+export interface AuditEventData {
+  id: string;
+  action?: string;
+  actor?: string;
+  event_type?: string;
+  entity_type: string;
+  entity_id: string;
+  actor_id?: string;
+  actor_name?: string;
+  description?: string;
+  details?: any;
+  created_at: string;
+}
+
+export async function getOverview(): Promise<OverviewMetricsData> {
+  return apiFetch<OverviewMetricsData>("/api/v1/overview");
+}
+
+export async function getClients(search?: string): Promise<ClientData[]> {
+  const q = search ? `?search=${encodeURIComponent(search)}` : "";
+  return apiFetch<ClientData[]>(`/api/v1/clients${q}`);
+}
+
+export async function getClient(id: string): Promise<ClientData> {
+  return apiFetch<ClientData>(`/api/v1/clients/${id}`);
+}
+
+export async function getClientLedger(id: string): Promise<ClientLedgerData> {
+  return apiFetch<ClientLedgerData>(`/api/v1/clients/${id}/ledger`);
+}
+
+export async function createClient(data: Partial<ClientData>): Promise<ClientData> {
+  return apiFetch<ClientData>("/api/v1/clients", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getInvoices(params?: { client_id?: string; status?: string; overdue_only?: boolean }): Promise<InvoiceData[]> {
+  const sp = new URLSearchParams();
+  if (params?.client_id) sp.set("client_id", params.client_id);
+  if (params?.status) sp.set("status", params.status);
+  if (params?.overdue_only) sp.set("overdue_only", "true");
+  const q = sp.toString() ? `?${sp.toString()}` : "";
+  return apiFetch<InvoiceData[]>(`/api/v1/invoices${q}`);
+}
+
+export async function getInvoice(id: string): Promise<InvoiceData> {
+  return apiFetch<InvoiceData>(`/api/v1/invoices/${id}`);
+}
+
+export async function createInvoiceDraft(data: any): Promise<InvoiceData> {
+  return apiFetch<InvoiceData>("/api/v1/invoices/draft", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function previewInvoice(data: any): Promise<any> {
+  return apiFetch<any>("/api/v1/invoices/preview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function issueInvoice(id: string, idempotencyKey?: string): Promise<InvoiceData> {
+  return apiFetch<InvoiceData>(`/api/v1/invoices/${id}/issue`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idempotency_key: idempotencyKey }),
+  });
+}
+
+export async function cancelInvoice(id: string, reason?: string): Promise<InvoiceData> {
+  return apiFetch<InvoiceData>(`/api/v1/invoices/${id}/cancel`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export async function getPayments(clientId?: string): Promise<PaymentData[]> {
+  const q = clientId ? `?client_id=${encodeURIComponent(clientId)}` : "";
+  return apiFetch<PaymentData[]>(`/api/v1/payments${q}`);
+}
+
+export async function recordPayment(data: Partial<PaymentData>): Promise<PaymentData> {
+  return apiFetch<PaymentData>("/api/v1/payments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function allocatePayment(data: { payment_id: string; invoice_id: string; amount_to_allocate?: number }): Promise<any> {
+  return apiFetch<any>("/api/v1/payments/allocate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getExpenses(): Promise<ExpenseData[]> {
+  return apiFetch<ExpenseData[]>("/api/v1/expenses");
+}
+
+export async function createExpense(data: Partial<ExpenseData>): Promise<ExpenseData> {
+  return apiFetch<ExpenseData>("/api/v1/expenses", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function chatAssistant(message: string, conversationId?: string, approvalRequestId?: string): Promise<AssistantChatResponse> {
+  return apiFetch<AssistantChatResponse>("/api/v1/assistant/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      conversation_id: conversationId,
+      approval_request_id: approvalRequestId,
+    }),
+  });
+}
+
+export async function approveAssistantAction(approvalRequestId: string): Promise<any> {
+  return apiFetch<any>("/api/v1/assistant/approve", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ approval_request_id: approvalRequestId }),
+  });
+}
+
+export async function getAuditEvents(): Promise<AuditEventData[]> {
+  return apiFetch<AuditEventData[]>("/api/v1/audit-events");
+}
+
+
+// ---------------------------------------------------------------------------
+// IntentFlow AI Website Personalization & Experimentation APIs
+// ---------------------------------------------------------------------------
+
+export interface WebsiteProjectData {
+  id: string;
+  name: string;
+  url?: string;
+  domain?: string;
+  business_objective?: string;
+  target_audience?: string;
+  industry?: string;
+  brand_voice?: string;
+  brand_guidelines?: {
+    tone?: string;
+    prohibited_terms?: string[];
+    required_phrases?: string[];
+    headline_max_chars?: number;
+    cta_max_chars?: number;
+  };
+  brand_rules?: any;
+  pages?: PageSnapshotData[];
+  audiences?: AudienceSegmentData[];
+  variants?: ExperienceVariantData[];
+  created_at: string;
+}
+
+export type ProjectData = WebsiteProjectData;
+
+export interface PageSnapshotData {
+  id: string;
+  project_id: string;
+  url?: string;
+  content_hash?: string;
+  http_status?: number;
+  title?: string;
+  meta_description?: string;
+  headings?: { tag: string; text: string }[];
+  value_prop?: string;
+  benefits?: string[];
+  calls_to_action?: { text: string; href?: string }[];
+  trust_badges?: string[];
+  raw_text?: string;
+  extracted_elements?: Record<string, any>;
+  variants?: ExperienceVariantData[];
+  created_at: string;
+}
+
+export interface AudienceSegmentData {
+  id: string;
+  project_id: string;
+  name: string;
+  source?: string;
+  persona_description?: string;
+  hypothesis?: string;
+  intent_hypotheses?: string[];
+  created_at: string;
+}
+
+export interface ExperienceVariantData {
+  id: string;
+  project_id: string;
+  page_snapshot_id: string;
+  audience_segment_id?: string;
+  name?: string;
+  variant_name: string;
+  headline: string;
+  subheading?: string;
+  main_copy?: string;
+  body_copy?: string;
+  benefits?: string[];
+  cta_text: string;
+  cta_url?: string;
+  status: "draft" | "generated" | "needs_review" | "approved" | "rejected" | "archived";
+  review_status?: string;
+  guardrail_report?: any;
+  validation_results?: {
+    is_valid: boolean;
+    brand_score: number;
+    issues: { type: "error" | "warning"; field: string; message: string }[];
+    prohibited_detected?: string[];
+  };
+  rationale?: string;
+  approved_by?: string;
+  approved_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExperimentVariantMetric {
+  variant_id: string;
+  variant_name: string;
+  is_control: boolean;
+  exposures: number;
+  conversions: number;
+  conversion_rate: number;
+  relative_lift_pct: number;
+  absolute_difference_pct: number;
+  z_score: number;
+  p_value: number;
+  confidence_level_pct: number;
+  is_significant: boolean;
+  ci_lower: number;
+  ci_upper: number;
+  sample_size_warning: boolean;
+}
+
+export interface ExperimentMetricsData {
+  experiment_id: string;
+  experiment_name: string;
+  status: string;
+  primary_metric: string;
+  total_exposures: number;
+  total_conversions: number;
+  total_visitors?: number;
+  control_variant_id: string;
+  control?: any;
+  variants: ExperimentVariantMetric[] | Record<string, any>;
+  recommendation: string;
+  computed_at: string;
+}
+
+export interface ExperimentData {
+  id: string;
+  project_id: string;
+  page_snapshot_id: string;
+  name: string;
+  status: "draft" | "running" | "paused" | "completed";
+  primary_metric: string;
+  traffic_allocation: Record<string, number>;
+  start_time?: string;
+  end_time?: string;
+  created_at: string;
+}
+
+export interface AgentExecutionStep {
+  node: string;
+  status: string;
+  latency_ms?: number;
+  duration_ms?: number;
+  details?: string;
+  output_summary?: string;
+}
+
+export interface AgentExecutionTraceData {
+  id: string;
+  workflow_type?: string;
+  workflow_name?: string;
+  status: string;
+  input_data?: any;
+  output_data?: any;
+  input_state?: any;
+  output_state?: any;
+  steps: AgentExecutionStep[];
+  total_latency_ms?: number;
+  duration_ms?: number;
+  total_tokens?: number;
+  created_at: string;
+  completed_at?: string;
+}
+
+export interface EvaluationCaseResult {
+  case_id: string;
+  suite: string;
+  name: string;
+  passed: boolean;
+  details: string;
+}
+
+export interface EvaluationRunData {
+  id: string;
+  suite_name: string;
+  model_name?: string;
+  total_cases?: number;
+  total_tests?: number;
+  passed_cases?: number;
+  tests_passed?: number;
+  failed_cases?: number;
+  tests_failed?: number;
+  pass_rate?: number;
+  duration_ms?: number;
+  metrics?: {
+    accuracy_pct: number;
+    total_latency_ms: number;
+    brand_guardrails_passed?: number;
+    financial_correctness_passed?: number;
+  };
+  details?: EvaluationCaseResult[];
+  results?: any[];
+  created_at: string;
+}
+
+export interface IntentflowSummaryData {
+  projects_count: number;
+  pages_analyzed_count: number;
+  variants_generated_count: number;
+  pending_approvals_count: number;
+  running_experiments_count: number;
+  agent_traces_count: number;
+}
+
+export async function getIntentflowSummary(): Promise<IntentflowSummaryData> {
+  return apiFetch<IntentflowSummaryData>("/api/v1/intentflow/overview/summary");
+}
+
+export async function getProjects(): Promise<WebsiteProjectData[]> {
+  return apiFetch<WebsiteProjectData[]>("/api/v1/intentflow/projects");
+}
+
+export async function createProject(data: Partial<WebsiteProjectData>): Promise<WebsiteProjectData> {
+  return apiFetch<WebsiteProjectData>("/api/v1/intentflow/projects", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: data.name,
+      url: data.url || (data.domain ? 'https://' + data.domain : undefined),
+      business_objective: data.business_objective || 'Website Personalization & Conversion Optimization',
+      target_audience: data.target_audience || data.brand_voice || '',
+      brand_guidelines: data.brand_guidelines || data.brand_rules,
+    }),
+  });
+}
+
+export async function getProjectDetails(projectId: string): Promise<{
+  project: WebsiteProjectData;
+  snapshots: PageSnapshotData[];
+  audiences: AudienceSegmentData[];
+  variants: ExperienceVariantData[];
+  experiments: ExperimentData[];
+}> {
+  return apiFetch(`/api/v1/intentflow/projects/${projectId}`);
+}
+
+export async function ingestPageUrl(projectId: string, url: string): Promise<PageSnapshotData> {
+  return apiFetch<PageSnapshotData>(`/api/v1/intentflow/projects/${projectId}/ingest`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+}
+
+export const ingestPage = ingestPageUrl;
+
+export async function createAudienceSegment(
+  projectId: string,
+  data: { name: string; hypothesis?: string; persona_description?: string; intent_hypotheses?: string[] }
+): Promise<AudienceSegmentData> {
+  return apiFetch<AudienceSegmentData>(`/api/v1/intentflow/projects/${projectId}/audiences`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: data.name,
+      persona_description: data.hypothesis || data.persona_description || "",
+      intent_hypotheses: data.hypothesis ? [data.hypothesis] : (data.intent_hypotheses || []),
+    }),
+  });
+}
+
+export async function generateVariantsWithAgent(projectId: string, data?: {
+  target_url?: string;
+  audience_name?: string;
+  audience_persona?: string;
+  page_id?: string;
+  audience_id?: string;
+  num_variants?: number;
+}): Promise<any> {
+  return apiFetch(`/api/v1/intentflow/projects/${projectId}/generate-variants`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data || {}),
+  });
+}
+
+export const generateVariants = generateVariantsWithAgent;
+
+export async function getProjectVariants(projectId: string): Promise<ExperienceVariantData[]> {
+  return apiFetch<ExperienceVariantData[]>(`/api/v1/intentflow/projects/${projectId}/variants`);
+}
+
+export async function updateVariant(variantId: string, data: Partial<ExperienceVariantData>): Promise<ExperienceVariantData> {
+  return apiFetch<ExperienceVariantData>(`/api/v1/intentflow/variants/${variantId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function approveVariant(variantId: string, status?: string, feedback?: string): Promise<any> {
+  return apiFetch(`/api/v1/intentflow/variants/${variantId}/approve`, {
+    method: "POST",
+  });
+}
+
+export async function rejectVariant(variantId: string): Promise<any> {
+  return apiFetch(`/api/v1/intentflow/variants/${variantId}/reject`, {
+    method: "POST",
+  });
+}
+
+export async function getExperiments(projectId?: string): Promise<ExperimentData[]> {
+  const url = projectId ? `/api/v1/intentflow/experiments?project_id=${projectId}` : "/api/v1/intentflow/experiments";
+  return apiFetch<ExperimentData[]>(url);
+}
+
+export async function createExperiment(data: {
+  project_id: string;
+  page_snapshot_id: string;
+  name: string;
+  traffic_allocation: Record<string, number>;
+  primary_metric?: string;
+}): Promise<ExperimentData> {
+  return apiFetch<ExperimentData>("/api/v1/intentflow/experiments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+}
+
+export async function getExperimentMetrics(experimentId: string): Promise<ExperimentMetricsData> {
+  return apiFetch<ExperimentMetricsData>(`/api/v1/intentflow/experiments/${experimentId}/metrics`);
+}
+
+export async function simulateTraffic(experimentId: string, data?: {
+  total_visitors?: number;
+  control_cr?: number;
+  variant_cr?: number;
+}): Promise<any> {
+  return apiFetch(`/api/v1/intentflow/experiments/${experimentId}/simulate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data || {}),
+  });
+}
+
+export async function getAgentTraces(limit: number = 20): Promise<AgentExecutionTraceData[]> {
+  return apiFetch<AgentExecutionTraceData[]>(`/api/v1/intentflow/traces?limit=${limit}`);
+}
+
+export async function getEvaluations(limit: number = 15): Promise<EvaluationRunData[]> {
+  return apiFetch<EvaluationRunData[]>(`/api/v1/intentflow/evaluations?limit=${limit}`);
+}
+
+export async function runEvaluationSuite(): Promise<EvaluationRunData> {
+  return apiFetch<EvaluationRunData>("/api/v1/intentflow/evaluations/run", {
+    method: "POST",
+  });
+}
+
+
+// ── Corporate Dossiers & Multi-Page Document Ingestion ────────────────────────
+
+export interface DossierData {
+  id: string;
+  name: string;
+  subtitle: string;
+  industry: string;
+  state: string;
+  gstin: string;
+  pages_count: number;
+  pdf_url: string;
+  total_invoiced: number;
+  total_collected: number;
+  receivables: number;
+  overdue: number;
+  expenses: number;
+  net_flow: number;
+  active_invoices_count: number;
+  clients_count: number;
+  top_client: string;
+  overdue_client: string;
+}
+
+export async function getDossiers(): Promise<DossierData[]> {
+  return apiFetch<DossierData[]>("/api/v1/intentflow/dossiers");
+}
+
+export async function activateDossier(dossierId: string): Promise<any> {
+  return apiFetch("/api/v1/intentflow/dossiers/activate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ dossier_id: dossierId }),
+  });
+}
+
+export async function uploadDossierDocument(formData: FormData): Promise<any> {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const res = await fetch(`${baseUrl}/api/v1/intentflow/dossiers/upload`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(errorText || "Failed to upload document");
+  }
+  return res.json();
+}

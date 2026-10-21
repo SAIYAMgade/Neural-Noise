@@ -451,3 +451,213 @@ class AgentCycleResponse(BaseModel):
     actions_pending_approval: int
     actions_failed: int
     error: str = ""
+
+
+# ---------------------------------------------------------------------------
+# FinPilot AI Financial Operations Schemas
+# ---------------------------------------------------------------------------
+
+class ClientCreateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=255)
+    email: str = Field(min_length=3, max_length=255)
+    company_name: str | None = None
+    phone: str | None = None
+    billing_address: str | None = None
+    state_code: str = Field(default="27", min_length=2, max_length=2)
+    gstin: str | None = None
+    currency: str = Field(default="INR", min_length=3, max_length=3)
+    payment_terms_days: int = Field(default=15, ge=0, le=180)
+    notes: str | None = None
+
+
+class ClientResponse(BaseModel):
+    id: uuid.UUID
+    business_id: uuid.UUID
+    name: str
+    company_name: str | None
+    email: str
+    phone: str | None
+    billing_address: str | None
+    state_code: str
+    gstin: str | None
+    currency: str
+    payment_terms_days: int
+    status: str
+    notes: str | None
+    created_at: datetime
+
+
+class ClientLedgerResponse(BaseModel):
+    client: ClientResponse
+    total_invoiced: Decimal
+    total_paid: Decimal
+    total_due: Decimal
+    overdue_invoices_count: int
+    invoices_count: int
+    payments_count: int
+
+
+class InvoiceLineItemInput(BaseModel):
+    description: str = Field(min_length=1, max_length=500)
+    hsn_sac_code: str | None = None
+    quantity: Decimal = Field(default=Decimal("1.0"), ge=0)
+    unit_price: Decimal = Field(ge=0)
+    discount_pct: Decimal = Field(default=Decimal("0.0"), ge=0, le=100)
+    tax_rate_pct: Decimal = Field(default=Decimal("18.0"), ge=0)
+
+
+class InvoiceLineItemResponse(BaseModel):
+    id: uuid.UUID
+    description: str
+    hsn_sac_code: str | None
+    quantity: Decimal
+    unit_price: Decimal
+    discount_pct: Decimal
+    tax_rate_pct: Decimal
+    line_total: Decimal
+    tax_amount: Decimal
+
+
+class InvoiceDraftRequest(BaseModel):
+    client_id: uuid.UUID
+    line_items: list[InvoiceLineItemInput]
+    invoice_date: date | None = None
+    due_date: date | None = None
+    due_days: int | None = 15
+    notes: str | None = None
+    is_export: bool = False
+
+
+class InvoiceIssueRequest(BaseModel):
+    idempotency_key: str | None = None
+
+
+class InvoiceResponse(BaseModel):
+    id: uuid.UUID
+    business_id: uuid.UUID
+    client_id: uuid.UUID
+    client_name: str | None = None
+    invoice_number: str
+    invoice_date: date
+    due_date: date
+    status: str
+    currency: str
+    subtotal: Decimal
+    discount_total: Decimal
+    tax_type: str
+    cgst_amount: Decimal
+    sgst_amount: Decimal
+    igst_amount: Decimal
+    total_tax: Decimal
+    grand_total: Decimal
+    amount_paid: Decimal
+    amount_due: Decimal
+    notes: str | None
+    pdf_path: str | None
+    created_at: datetime
+    issued_at: datetime | None
+    line_items: list[InvoiceLineItemResponse] = []
+
+
+class InvoiceCalculationPreviewRequest(BaseModel):
+    client_id: uuid.UUID
+    line_items: list[InvoiceLineItemInput]
+    is_export: bool = False
+
+
+class InvoiceCalculationPreviewResponse(BaseModel):
+    subtotal: Decimal
+    discount_total: Decimal
+    taxable_amount: Decimal
+    tax_type: str
+    cgst_amount: Decimal
+    sgst_amount: Decimal
+    igst_amount: Decimal
+    total_tax: Decimal
+    grand_total: Decimal
+
+
+class PaymentCreateRequest(BaseModel):
+    client_id: uuid.UUID
+    amount: Decimal = Field(gt=0)
+    payment_date: date | None = None
+    payment_method: str = "bank_transfer"
+    reference_number: str | None = None
+    notes: str | None = None
+    allocate_to_invoice_id: uuid.UUID | None = None
+
+
+class PaymentAllocationRequest(BaseModel):
+    payment_id: uuid.UUID
+    invoice_id: uuid.UUID
+    amount_to_allocate: Decimal | None = None
+
+
+class PaymentResponse(BaseModel):
+    id: uuid.UUID
+    business_id: uuid.UUID
+    client_id: uuid.UUID
+    client_name: str | None = None
+    payment_number: str
+    payment_date: date
+    amount: Decimal
+    currency: str
+    payment_method: str
+    reference_number: str | None
+    status: str
+    notes: str | None
+    allocated_amount: Decimal
+    unallocated_amount: Decimal
+    created_at: datetime
+
+
+class ExpenseCreateRequest(BaseModel):
+    date: date
+    category: str
+    merchant: str
+    amount: Decimal = Field(gt=0)
+    tax_amount: Decimal = Decimal("0.00")
+    gstin: str | None = None
+    payment_method: str = "bank_transfer"
+    notes: str | None = None
+
+
+class ExpenseResponse(BaseModel):
+    id: uuid.UUID
+    business_id: uuid.UUID
+    date: date
+    category: str
+    merchant: str
+    amount: Decimal
+    currency: str
+    tax_amount: Decimal
+    gstin: str | None
+    payment_method: str
+    notes: str | None
+    receipt_path: str | None
+    is_verified: bool
+    created_at: datetime
+
+
+class AssistantChatRequest(BaseModel):
+    message: str
+    conversation_id: uuid.UUID | None = None
+    approval_request_id: uuid.UUID | None = None
+
+
+class AssistantChatResponse(BaseModel):
+    response: str
+    message: str | None = None
+    reply: str | None = None
+    conversation_id: uuid.UUID
+    intent: str
+    tool_name: str | None = None
+    card_type: str | None = None
+    card_data: dict[str, Any] | None = None
+    structured_card: dict[str, Any] | None = None
+    requires_approval: bool = False
+    approval_request_id: uuid.UUID | None = None
+
+
+class ApprovalConfirmRequest(BaseModel):
+    approval_request_id: uuid.UUID

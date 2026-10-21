@@ -10,11 +10,20 @@ dist/
 build/
 .eggs/
 
-# Environment & secrets
+# Environment & secrets (NEVER commit actual keys or .env files)
 .env
-.env.local
-.env.*.local
+.env.*
 *.env
+*.env.*
+**/.env
+**/.env.*
+*.pem
+*.key
+*.cert
+*.crt
+*credential*.json
+*secret*.json
+!**/.env.example
 
 # Database
 *.db
@@ -24,7 +33,7 @@ build/
 # Next.js
 frontend/.next/
 frontend/node_modules/
-frontend/.env.local
+frontend/.env*
 frontend/out/
 
 # macOS
@@ -39,3 +48,7 @@ frontend/out/
 .idea/
 .vscode/
 *.swp
+
+# Generated Invoices
+data/invoices/*.pdf
+!data/invoices/.gitkeep

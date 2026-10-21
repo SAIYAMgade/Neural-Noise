@@ -9,11 +9,6 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
-
 _PROJECT_ROOT = Path(__file__).parent.parent
 _INVOICES_DIR = _PROJECT_ROOT / "data" / "invoices"
 
@@ -25,8 +20,16 @@ def generate_invoice_pdf(
     output_path: str | Path | None = None,
 ) -> Path:
     """
-    Generates a PDF document for an invoice.
+    Generates a PDF document for an invoice using ReportLab.
     """
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+        from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    except ImportError as e:
+        raise RuntimeError("reportlab is required for PDF generation. Please install reportlab.") from e
+
     _INVOICES_DIR.mkdir(parents=True, exist_ok=True)
     inv_id = str(invoice_data.get("id", "invoice"))
     target_path = Path(output_path) if output_path else _INVOICES_DIR / f"{inv_id}.pdf"

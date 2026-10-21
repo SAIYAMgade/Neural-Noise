@@ -51,8 +51,9 @@ def _get_engine():
         url = _build_url()
         connect_args: dict = {}
         if url.startswith("sqlite"):
-            # SQLite requires check_same_thread=False for async usage
             connect_args = {"check_same_thread": False}
+        else:
+            connect_args = {"timeout": 5.0, "command_timeout": 10.0}
         _engine = create_async_engine(
             url,
             echo=False,
@@ -121,10 +122,19 @@ def get_db_manager() -> DatabaseManager:
 async def init_db() -> None:
     """Create all tables (idempotent - safe to call on every startup)."""
     from api.models import Base
-
-    engine = _get_engine()
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+    global _engine, _session_factory
+    try:
+        engine = _get_engine()
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    except Exception as exc:
+        print(f"[DB INIT WARNING] Primary DB unreachable ({exc}). Falling back to local SQLite...")
+        fallback_url = f"sqlite+aiosqlite:///{_DEFAULT_DB}"
+        _engine = create_async_engine(fallback_url, connect_args={"check_same_thread": False})
+        _session_factory = None
+        async with _engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        print("[DB INIT] Local SQLite fallback ready.")
 
 
 async def close_db() -> None:

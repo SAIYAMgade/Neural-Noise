@@ -2,7 +2,13 @@
 main.py - Root ASGI entrypoint for Render and cloud hosting platforms.
 Forwards to the primary FastAPI application defined in api.main:app.
 """
+import sys
+
+print("[Render Startup] Loading Neural Noise ASGI application...", flush=True)
+
 from api.main import app
+
+print("[Render Startup] Neural Noise ASGI application loaded successfully.", flush=True)
 
 __all__ = ["app"]
 

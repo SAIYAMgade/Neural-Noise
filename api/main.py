@@ -192,12 +192,22 @@ def create_app(
     async def lifespan(app: FastAPI):
         db_manager = get_db_manager()
         if initialize_db:
-            await init_db()
+            try:
+                import asyncio
+                await asyncio.wait_for(init_db(), timeout=7.0)
+            except Exception as exc:
+                print(f"[STARTUP WARNING] Database initialization: {exc}")
         factory = graph_runner_factory or build_graph_runner
-        app.state.graph_runner = factory(db_manager)
+        try:
+            app.state.graph_runner = factory(db_manager)
+        except Exception as exc:
+            print(f"[STARTUP WARNING] Graph runner initialization: {exc}")
         app.state.app_version = _load_app_version()
         yield
-        await close_db()
+        try:
+            await close_db()
+        except Exception:
+            pass
 
     app = FastAPI(
         title="IntentFlow AI — Website Personalization & Experimentation Platform",

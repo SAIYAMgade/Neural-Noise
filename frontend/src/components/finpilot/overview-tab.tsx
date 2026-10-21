@@ -14,7 +14,6 @@ import {
   RefreshCw,
   Clock,
   CheckCircle2,
-  Upload,
   Eye,
   ExternalLink,
   ChevronRight,
@@ -24,7 +23,6 @@ import {
   getOverview,
   getAuditEvents,
   activateDossier,
-  uploadDossierDocument,
   type OverviewMetricsData,
   type AuditEventData,
 } from "@/lib/api";
@@ -92,7 +90,6 @@ export function OverviewTab({
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activatingId, setActivatingId] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   const loadData = async () => {
     try {
@@ -126,22 +123,6 @@ export function OverviewTab({
       console.error("Failed to activate dossier:", err);
     } finally {
       setActivatingId(null);
-    }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      await uploadDossierDocument(formData);
-      await loadData();
-    } catch (err) {
-      console.error("Failed to upload custom PDF:", err);
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -210,29 +191,15 @@ export function OverviewTab({
             <div className="flex items-center gap-2 mb-1">
               <span className="inline-flex items-center gap-1 rounded-full bg-rose-950/90 border border-rose-500/40 px-2.5 py-0.5 text-[11px] font-bold text-rose-300">
                 <BookOpen className="h-3 w-3" />
-                Statutory Dossiers &amp; PDF Ingestion
+                Verified Statutory Audit Dossiers
               </span>
               <span className="text-xs text-zinc-500 hidden sm:inline">
-                · Switch between verified statutory audits or upload custom financial records
+                · Switch between verified statutory audits with real-time double-entry reconciliation
               </span>
             </div>
             <h2 className="text-lg font-bold text-white">
-              Choose or Upload a Financial Dossier PDF
+              Active Statutory Financial Dossier
             </h2>
-          </div>
-
-          <div>
-            <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-4 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/30 border border-rose-400/40 transition">
-              <Upload className="h-3.5 w-3.5" />
-              <span>{uploading ? "Extracting PDF..." : "Upload Custom PDF/CSV"}</span>
-              <input
-                type="file"
-                accept=".pdf,.csv"
-                onChange={handleFileUpload}
-                disabled={uploading}
-                className="hidden"
-              />
-            </label>
           </div>
         </div>
 

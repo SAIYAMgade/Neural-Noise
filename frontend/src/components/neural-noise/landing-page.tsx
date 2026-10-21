@@ -15,11 +15,10 @@ import {
   CheckCircle2,
   ExternalLink,
   BookOpen,
-  Upload,
   Eye
 } from "lucide-react";
 import { NeuralNoise } from "@/components/ui/neural-noise";
-import { activateDossier, uploadDossierDocument } from "@/lib/api";
+import { activateDossier } from "@/lib/api";
 
 interface LandingPageProps {
   onEnterPlatform: () => void;
@@ -66,7 +65,6 @@ const DOSSIERS = [
 
 export function LandingPage({ onEnterPlatform }: LandingPageProps) {
   const [activatingId, setActivatingId] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
 
   const handleSelectDossier = async (dossierId: string) => {
     setActivatingId(dossierId);
@@ -77,23 +75,6 @@ export function LandingPage({ onEnterPlatform }: LandingPageProps) {
     } finally {
       setActivatingId(null);
       onEnterPlatform();
-    }
-  };
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      await uploadDossierDocument(formData);
-      onEnterPlatform();
-    } catch (err) {
-      console.error("Upload error:", err);
-      onEnterPlatform();
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -239,41 +220,26 @@ export function LandingPage({ onEnterPlatform }: LandingPageProps) {
               className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900/80 hover:bg-zinc-800/80 border border-zinc-700/80 px-6 py-4 text-sm font-semibold text-zinc-200 backdrop-blur-md transition-all shadow-md"
             >
               <BookOpen className="h-4 w-4 text-rose-400" />
-              <span>Choose or Upload Dossier PDF</span>
+              <span>Explore Statutory Dossiers</span>
             </a>
           </div>
         </section>
 
-        {/* Multi-Page Statutory Dossier Selector & Uploader Strip */}
+        {/* Multi-Page Statutory Dossier Selector Strip */}
         <section id="dossiers" className="border-y border-rose-500/20 bg-zinc-950/85 backdrop-blur-xl py-14">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
               <div>
                 <div className="inline-flex items-center gap-2 rounded-full bg-rose-950/80 border border-rose-500/30 px-3 py-1 text-xs font-bold text-rose-300 mb-2">
                   <FileText className="h-3.5 w-3.5" />
-                  <span>Choose or Upload Financial Dossier PDF</span>
+                  <span>Verified Corporate Financial Dossiers</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-                  Select a Verified Statutory Audit or Upload Your Own
+                  Select a Verified Statutory Audit Dossier
                 </h2>
                 <p className="mt-1 text-xs sm:text-sm text-zinc-400">
-                  Select any of the 3 multi-page statutory audits (22–25 pages each with complete double-entry books) or upload your own PDF/CSV.
+                  Select any of the 3 multi-page statutory audits (22–25 pages each with complete double-entry books and verified GST records).
                 </p>
-              </div>
-
-              {/* Upload Button */}
-              <div>
-                <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl bg-rose-600 hover:bg-rose-500 px-5 py-3 text-xs font-bold text-white shadow-lg shadow-rose-600/30 border border-rose-400/40 transition">
-                  <Upload className="h-4 w-4" />
-                  <span>{uploading ? "Extracting..." : "Upload Custom PDF / CSV"}</span>
-                  <input
-                    type="file"
-                    accept=".pdf,.csv"
-                    onChange={handleFileUpload}
-                    disabled={uploading}
-                    className="hidden"
-                  />
-                </label>
               </div>
             </div>
 

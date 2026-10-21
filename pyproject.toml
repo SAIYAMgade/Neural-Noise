@@ -7,7 +7,8 @@ readme = "README.md"
 packages = [
   { include = "agents" },
   { include = "api" },
-  { include = "graph" }
+  { include = "graph" },
+  { include = "services" }
 ]
 
 [tool.poetry.dependencies]

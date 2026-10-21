@@ -67,14 +67,12 @@ export default function HomePage() {
         { id: "invoices", label: "Invoices & GST", icon: FileText },
         { id: "tax-compliance", label: "Tax & GST Compliance", icon: ShieldCheck, badge: "New", badgeColor: "bg-emerald-950 text-emerald-300 border border-emerald-800" },
         { id: "clients", label: "Clients & Counterparties", icon: Users },
-        { id: "payments", label: "Payments & Collections", icon: CreditCard },
-        { id: "expenses", label: "Expenses & Runway", icon: Receipt },
       ],
     },
     {
       title: "AI AGENTS & OBSERVABILITY",
       items: [
-        { id: "flowchart", label: "LangGraph Flowchart", icon: GitFork, badge: "Graph", badgeColor: "bg-blue-950 text-blue-300 border border-blue-800" },
+        { id: "flowchart", label: "Architecture Flowcharts", icon: GitFork, badge: "LangGraph + RAG", badgeColor: "bg-blue-950 text-blue-300 border border-blue-800" },
         { id: "agent-lab", label: "Agent Lab & Traces", icon: Cpu, badge: "LangGraph", badgeColor: "bg-purple-950 text-purple-300 border border-purple-800" },
         { id: "evaluations", label: "AI Evals & Guardrails", icon: Award, badge: "Safety", badgeColor: "bg-teal-950 text-teal-300 border border-teal-800" },
       ],

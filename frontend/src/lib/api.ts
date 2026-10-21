@@ -22,7 +22,20 @@ import type {
   ChatMessage,
 } from "./types";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export function getBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "");
+  }
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host !== "localhost" && host !== "127.0.0.1") {
+      return "https://neural-noise.onrender.com";
+    }
+  }
+  return "http://localhost:8000";
+}
+
+const BASE = getBaseUrl();
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
@@ -295,7 +308,7 @@ export async function getBoardDeckStatus(runId: string): Promise<BoardDeckStatus
 
 /** Return the download URL for the generated board deck */
 export function getBoardDeckDownloadUrl(runId: string): string {
-  const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const BASE = getBaseUrl();
   return `${BASE}/runs/${runId}/board-deck/download`;
 }
 
@@ -1113,7 +1126,7 @@ export async function activateDossier(dossierId: string): Promise<any> {
 }
 
 export async function uploadDossierDocument(formData: FormData): Promise<any> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  const baseUrl = getBaseUrl();
   const res = await fetch(`${baseUrl}/api/v1/intentflow/dossiers/upload`, {
     method: "POST",
     body: formData,

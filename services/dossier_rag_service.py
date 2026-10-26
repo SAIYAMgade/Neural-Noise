@@ -138,39 +138,37 @@ def _generate_smart_fallback(
         )
 
     # 8. Loss / Profit / Financial health
-    if any(k in q for k in ["loss", "what is the loss", "any loss", "profit", "surplus"]):
+    if any(k in q for k in ["loss", "losses", "what is the loss", "what are the loss", "any loss", "profit", "surplus", "deficit", "margin", "p&l"]):
         surplus_val = float(meta['net_flow'])
         if surplus_val >= 0:
             return (
-                f"**{meta['name']}** reported no statutory net loss for this period.\n"
-                f"The business generated a net liquid surplus of ₹{surplus_val:,.2f} against ₹{float(meta['expenses']):,.2f} in operating expenses, "
-                f"with ₹{total_due:,.2f} remaining in outstanding receivables."
+                f"**{meta['name']}** reported zero statutory net loss (₹0 deficit) for this period. "
+                f"The company generated a net liquid surplus of ₹{surplus_val:,.2f} against ₹{float(meta['expenses']):,.2f} in operating expenses."
             )
         else:
             return f"**{meta['name']}** reflects an operating deficit of ₹{abs(surplus_val):,.2f}."
 
     # 9. Receivables / Who owes money / Overdue
-    if any(k in q for k in ["who owes", "owes money", "overdue", "pending payment", "unpaid", "receivables", "debtor"]):
+    if any(k in q for k in ["who owes", "owes money", "owes", "overdue", "pending payment", "unpaid", "receivables", "debtor"]):
         if overdue_invoices:
             top_overdue = meta.get("overdue_client", "Primary debtor")
             return (
-                f"Outstanding receivables stand at ₹{total_due:,.2f}, with ₹{overdue_sum:,.2f} critically overdue ({len(overdue_invoices)} invoices).\n"
-                f"The primary pending debtor is **{top_overdue}**."
+                f"Outstanding receivables stand at ₹{total_due:,.2f}, with ₹{overdue_sum:,.2f} critically overdue. "
+                f"The primary pending debtor is **{top_overdue}** (notice dispatched under Section 18 MSMED Act)."
             )
         return f"Outstanding receivables stand at ₹{total_due:,.2f} across current active clients. No overdue alerts recorded."
 
     # 10. GST / Tax compliance
     if any(k in q for k in ["gst", "tax", "igst", "cgst", "sgst", "hsn", "sac"]):
         return (
-            f"GST reconciliation for **{meta['name']}** (GSTIN: {meta['gstin']}):\n"
-            f"All invoices comply with 18% GST (CGST 9% + SGST 9% intra-state or IGST 18% inter-state) mapped to SAC codes 998311 and 998313."
+            f"GST reconciliation for **{meta['name']}** (GSTIN: {meta['gstin']}): "
+            f"All invoices comply with 18% GST (CGST 9% + SGST 9% or IGST 18%) mapped to SAC codes 998311 and 998313."
         )
 
-    # 11. Revenue / Collections
-    if any(k in q for k in ["revenue", "invoiced", "collection", "how much billed", "billed"]):
+    # 11. Revenue / Collections / Total Amount / Turnover
+    if any(k in q for k in ["revenue", "invoiced", "collection", "how much billed", "billed", "amount", "amont", "amontt", "total", "gross", "turnover", "how much money"]):
         return (
-            f"**{meta['name']} Revenue Summary:**\n"
-            f"Total Gross Invoiced: ₹{total_invoiced:,.2f} | Total Collected: ₹{total_collected:,.2f} | Outstanding: ₹{total_due:,.2f}."
+            f"Total gross invoiced revenue for **{meta['name']}** is ₹{total_invoiced:,.2f} across verified contracts (₹{total_collected:,.2f} realized in cash, ₹{total_due:,.2f} pending)."
         )
 
     # 12. If chunks matched well from TF-IDF, extract the most relevant sentence

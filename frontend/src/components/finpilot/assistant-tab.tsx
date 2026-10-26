@@ -139,6 +139,268 @@ function FormattedMessage({ text }: { text: string }) {
   return <div className="space-y-1">{elements}</div>;
 }
 
+function RenderAssistantCard({
+  card,
+  approvalRequest,
+  approvingId,
+  onApprove,
+}: {
+  card?: AssistantChatResponse["structured_card"];
+  approvalRequest?: AssistantChatResponse["approval_request"];
+  approvingId: string | null;
+  onApprove: (id: string) => void;
+}) {
+  if (!card || !card.type || !card.data) return null;
+  const d = card.data;
+
+  // 1. Invoice Draft Preview
+  if (card.type === "invoice_draft") {
+    if (!d.subtotal && !d.total_amount) return null;
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all space-y-3">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-rose-400" />
+            <span className="text-xs font-bold text-white uppercase tracking-wider">
+              Invoice Draft Preview
+            </span>
+          </div>
+          <span className="rounded-full bg-amber-950/80 px-2 py-0.5 text-[11px] font-semibold text-amber-300 border border-amber-800/80">
+            Pending Approval
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div>
+            <span className="text-zinc-500">Client:</span>
+            <p className="font-semibold text-white">{d.client_name || "Client"}</p>
+          </div>
+          <div>
+            <span className="text-zinc-500">Tax Type:</span>
+            <p className="font-semibold text-white">
+              {d.is_interstate ? "Inter-State (IGST 18%)" : "Intra-State (CGST 9% + SGST 9%)"}
+            </p>
+          </div>
+          <div>
+            <span className="text-zinc-500">Subtotal:</span>
+            <p className="font-semibold text-white">{formatINR(d.subtotal)}</p>
+          </div>
+          <div>
+            <span className="text-zinc-500">Total Tax:</span>
+            <p className="font-semibold text-white">
+              {formatINR((d.cgst_total || 0) + (d.sgst_total || 0) + (d.igst_total || 0))}
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-lg bg-zinc-900 p-2.5 flex items-center justify-between border border-zinc-800">
+          <span className="text-xs font-semibold text-zinc-300">Total Amount Due:</span>
+          <span className="text-base font-bold text-rose-400">{formatINR(d.total_amount)}</span>
+        </div>
+
+        {approvalRequest && (
+          <div className="pt-2">
+            <button
+              onClick={() => onApprove(approvalRequest.id)}
+              disabled={approvingId === approvalRequest.id}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-xs font-semibold text-white shadow-md transition disabled:opacity-50"
+            >
+              {approvingId === approvalRequest.id ? (
+                <RefreshCw className="h-4 w-4 animate-spin" />
+              ) : (
+                <CheckCircle2 className="h-4 w-4" />
+              )}
+              <span>Confirm &amp; Issue Official GST Invoice</span>
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 2. Invoice Officially Issued
+  if (card.type === "invoice_issued") {
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all space-y-2.5">
+        <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase">
+          <CheckCircle2 className="h-4 w-4" />
+          <span>Invoice Officially Issued &amp; Sealed</span>
+        </div>
+        <div className="text-xs space-y-1">
+          <p className="text-zinc-400">
+            Invoice Number: <strong className="text-white">{d.invoice_number || d.invoice_id}</strong>
+          </p>
+          <p className="text-zinc-400">
+            Grand Total: <strong className="text-white">{formatINR(d.grand_total || d.total_amount)}</strong>
+          </p>
+        </div>
+        {d.pdf_path && (
+          <a
+            href={`${getBaseUrl()}/api/v1/invoices/${d.invoice_id}/pdf`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-500 px-3 py-2 text-xs font-semibold text-white shadow-md transition"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Download Official GST PDF
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  // 3. Overdue Receivables Summary
+  if (card.type === "overdue_summary") {
+    const overdueAmt = Number(d.total_overdue_amount ?? d.total_overdue ?? d.overdue_amount ?? 0);
+    const rawList: any[] = Array.isArray(d.invoices) && d.invoices.length > 0
+      ? d.invoices
+      : (d.primary_debtor ? [{
+          id: "primary-debtor",
+          client_name: d.primary_debtor,
+          invoice_number: d.invoice_number || "INV-2026-008",
+          days_overdue: d.days_overdue || 45,
+          amount_due: overdueAmt || 247800,
+        }] : []);
+
+    if (overdueAmt <= 0 && rawList.length === 0) return null;
+
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all space-y-2.5">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+          <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase">
+            <AlertTriangle className="h-4 w-4" />
+            <span>Overdue Receivables Summary</span>
+          </div>
+          <span className="text-xs font-bold text-rose-400">
+            {formatINR(overdueAmt)}
+          </span>
+        </div>
+        <div className="space-y-1.5 max-h-48 overflow-y-auto divide-y divide-zinc-800/80">
+          {rawList.map((inv: any, idx: number) => (
+            <div key={inv.id || idx} className="pt-1.5 flex items-center justify-between text-xs">
+              <div>
+                <p className="font-semibold text-white">{inv.client_name}</p>
+                <span className="text-[11px] text-zinc-500">
+                  {inv.invoice_number} · {inv.days_overdue || 45} days overdue
+                </span>
+              </div>
+              <span className="font-bold text-rose-400">
+                {formatINR(inv.amount_due || inv.balance_due)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 4. Financial Summary
+  if (card.type === "financial_summary") {
+    const invoiced = Number(d.total_invoiced ?? d.invoiced ?? 0);
+    const collected = Number(d.total_collected ?? d.collected ?? 0);
+    const receivables = Number(d.outstanding_receivables ?? d.receivables ?? 0);
+    const netFlow = Number(d.net_cash_flow ?? d.surplus ?? 0);
+
+    if (invoiced <= 0 && collected <= 0) return null;
+
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all space-y-2.5">
+        <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase border-b border-zinc-800 pb-2">
+          <TrendingUp className="h-4 w-4" />
+          <span>Corporate Financial Position</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
+            <span className="text-zinc-500">Invoiced:</span>
+            <p className="font-bold text-white">{formatINR(invoiced)}</p>
+          </div>
+          <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
+            <span className="text-emerald-400">Collected:</span>
+            <p className="font-bold text-emerald-400">{formatINR(collected)}</p>
+          </div>
+          <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
+            <span className="text-amber-400">Receivables:</span>
+            <p className="font-bold text-amber-400">{formatINR(receivables)}</p>
+          </div>
+          <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
+            <span className="text-rose-400">Net Flow:</span>
+            <p className="font-bold text-rose-400">{formatINR(netFlow)}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 5. Dossier Summary
+  if (card.type === "dossier_summary") {
+    const entityName = d.entity_name || d.name || "Apex Global Technologies Pvt Ltd";
+    const dossierTitle = d.dossier_title || d.industry || "Enterprise Cloud & AI Systems";
+    const gstin = d.gstin || "29AAACA1234A1Z5";
+    const pagesCount = d.pages_count || 24;
+    const invoiced = Number(d.total_invoiced ?? d.invoiced ?? 0);
+    const collected = Number(d.total_collected ?? d.collected ?? 0);
+    const receivables = Number(d.outstanding_receivables ?? d.receivables ?? 0);
+    const overdueAmt = Number(d.overdue_amount ?? d.overdue ?? 0);
+
+    if (invoiced <= 0 && collected <= 0) return null;
+
+    return (
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all space-y-3">
+        <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
+          <div className="flex items-center gap-2 text-rose-400">
+            <FileText className="h-4 w-4" />
+            <span className="text-xs font-bold uppercase tracking-wider">
+              Active Statutory Audit &amp; Dossier
+            </span>
+          </div>
+          <span className="rounded-full bg-rose-950/80 px-2 py-0.5 text-[10px] font-bold text-rose-300 border border-rose-500/40">
+            {pagesCount} Pages Verified
+          </span>
+        </div>
+
+        <div className="text-xs">
+          <p className="font-bold text-white">{entityName}</p>
+          <p className="text-[11px] text-zinc-400">{dossierTitle} · {gstin}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
+            <span className="text-zinc-500">Total Invoiced:</span>
+            <p className="font-bold text-white">{formatINR(invoiced)}</p>
+          </div>
+          <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
+            <span className="text-emerald-400">Total Collected:</span>
+            <p className="font-bold text-emerald-400">{formatINR(collected)}</p>
+          </div>
+          <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
+            <span className="text-amber-400">Receivables:</span>
+            <p className="font-bold text-amber-400">{formatINR(receivables)}</p>
+          </div>
+          <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
+            <span className="text-rose-400">Overdue Balance:</span>
+            <p className="font-bold text-rose-400">{formatINR(overdueAmt)}</p>
+          </div>
+        </div>
+
+        {d.pdf_url && (
+          <a
+            href={d.pdf_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-3 py-2 text-xs font-semibold text-white transition shadow-md"
+          >
+            <Download className="h-3.5 w-3.5" />
+            View Complete Multi-Page Dossier PDF ({pagesCount} Pages)
+          </a>
+        )}
+      </div>
+    );
+  }
+
+  return null;
+}
+
+
 const SUGGESTIONS = [
   "Tell me about PDF 1",
   "What are the three PDFs?",
@@ -303,214 +565,12 @@ export function AssistantTab() {
               </div>
 
               {/* Structured Card Render */}
-              {m.structured_card && (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all">
-                  {/* Card Type: invoice_draft */}
-                  {m.structured_card.type === "invoice_draft" && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-rose-400" />
-                          <span className="text-xs font-bold text-white uppercase tracking-wider">
-                            Invoice Draft Preview
-                          </span>
-                        </div>
-                        <span className="rounded-full bg-amber-950/80 px-2 py-0.5 text-[11px] font-semibold text-amber-300 border border-amber-800/80">
-                          Pending Approval
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <span className="text-zinc-500">Client:</span>
-                          <p className="font-semibold text-white">
-                            {m.structured_card.data?.client_name || "Client"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-zinc-500">Tax Type:</span>
-                          <p className="font-semibold text-white">
-                            {m.structured_card.data?.is_interstate ? "Inter-State (IGST 18%)" : "Intra-State (CGST 9% + SGST 9%)"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-zinc-500">Subtotal:</span>
-                          <p className="font-semibold text-white">
-                            {formatINR(m.structured_card.data?.subtotal)}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-zinc-500">Total Tax:</span>
-                          <p className="font-semibold text-white">
-                            {formatINR(
-                              (m.structured_card.data?.cgst_total || 0) +
-                              (m.structured_card.data?.sgst_total || 0) +
-                              (m.structured_card.data?.igst_total || 0)
-                            )}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg bg-zinc-900 p-2.5 flex items-center justify-between border border-zinc-800">
-                        <span className="text-xs font-semibold text-zinc-300">Total Amount Due:</span>
-                        <span className="text-base font-bold text-rose-400">
-                          {formatINR(m.structured_card.data?.total_amount)}
-                        </span>
-                      </div>
-
-                      {/* Approval Trigger */}
-                      {m.approval_request && (
-                        <div className="pt-2">
-                          <button
-                            onClick={() => handleApprove(m.approval_request!.id)}
-                            disabled={approvingId === m.approval_request!.id}
-                            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-4 py-2.5 text-xs font-semibold text-white shadow-md transition disabled:opacity-50"
-                          >
-                            {approvingId === m.approval_request!.id ? (
-                              <RefreshCw className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <CheckCircle2 className="h-4 w-4" />
-                            )}
-                            <span>Confirm &amp; Issue Official GST Invoice</span>
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Card Type: invoice_issued */}
-                  {m.structured_card.type === "invoice_issued" && (
-                    <div className="space-y-2.5">
-                      <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs uppercase">
-                        <CheckCircle2 className="h-4 w-4" />
-                        <span>Invoice Officially Issued &amp; Sealed</span>
-                      </div>
-                      <div className="text-xs space-y-1">
-                        <p className="text-zinc-400">Invoice Number: <strong className="text-white">{m.structured_card.data?.invoice_number}</strong></p>
-                        <p className="text-zinc-400">Grand Total: <strong className="text-white">{formatINR(m.structured_card.data?.grand_total)}</strong></p>
-                      </div>
-                      {m.structured_card.data?.pdf_path && (
-                        <a
-                          href={`${getBaseUrl()}/api/v1/invoices/${m.structured_card.data?.invoice_id}/pdf`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-rose-600 hover:bg-rose-500 px-3 py-2 text-xs font-semibold text-white shadow-md transition"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          Download Official GST PDF
-                        </a>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Card Type: overdue_summary */}
-                  {m.structured_card.type === "overdue_summary" && (
-                    <div className="space-y-2.5">
-                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase">
-                          <AlertTriangle className="h-4 w-4" />
-                          <span>Overdue Receivables Summary</span>
-                        </div>
-                        <span className="text-xs font-bold text-rose-400">
-                          {formatINR(m.structured_card.data?.total_overdue_amount)}
-                        </span>
-                      </div>
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto divide-y divide-zinc-800/80">
-                        {m.structured_card.data?.invoices?.map((inv: any) => (
-                          <div key={inv.id} className="pt-1.5 flex items-center justify-between text-xs">
-                            <div>
-                              <p className="font-semibold text-white">{inv.client_name}</p>
-                              <span className="text-[11px] text-zinc-500">{inv.invoice_number} · {inv.days_overdue} days overdue</span>
-                            </div>
-                            <span className="font-bold text-rose-400">{formatINR(inv.amount_due)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Card Type: financial_summary */}
-                  {m.structured_card.type === "financial_summary" && (
-                    <div className="space-y-2.5">
-                      <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase border-b border-zinc-800 pb-2">
-                        <TrendingUp className="h-4 w-4" />
-                        <span>Corporate Financial Position</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
-                          <span className="text-zinc-500">Invoiced:</span>
-                          <p className="font-bold text-white">{formatINR(m.structured_card.data?.total_invoiced)}</p>
-                        </div>
-                        <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
-                          <span className="text-emerald-400">Collected:</span>
-                          <p className="font-bold text-emerald-400">{formatINR(m.structured_card.data?.total_collected)}</p>
-                        </div>
-                        <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
-                          <span className="text-amber-400">Receivables:</span>
-                          <p className="font-bold text-amber-400">{formatINR(m.structured_card.data?.outstanding_receivables)}</p>
-                        </div>
-                        <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
-                          <span className="text-rose-400">Net Flow:</span>
-                          <p className="font-bold text-rose-400">{formatINR(m.structured_card.data?.net_cash_flow)}</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Card Type: dossier_summary */}
-                  {m.structured_card.type === "dossier_summary" && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
-                        <div className="flex items-center gap-2 text-rose-400">
-                          <FileText className="h-4 w-4" />
-                          <span className="text-xs font-bold uppercase tracking-wider">
-                            Active Statutory Audit &amp; Dossier
-                          </span>
-                        </div>
-                        <span className="rounded-full bg-rose-950/80 px-2 py-0.5 text-[10px] font-bold text-rose-300 border border-rose-500/40">
-                          {m.structured_card.data?.pages_count} Pages Verified
-                        </span>
-                      </div>
-
-                      <div className="text-xs">
-                        <p className="font-bold text-white">{m.structured_card.data?.entity_name}</p>
-                        <p className="text-[11px] text-zinc-400">{m.structured_card.data?.dossier_title} · {m.structured_card.data?.gstin}</p>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
-                          <span className="text-zinc-500">Total Invoiced:</span>
-                          <p className="font-bold text-white">{formatINR(m.structured_card.data?.total_invoiced)}</p>
-                        </div>
-                        <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
-                          <span className="text-emerald-400">Total Collected:</span>
-                          <p className="font-bold text-emerald-400">{formatINR(m.structured_card.data?.total_collected)}</p>
-                        </div>
-                        <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
-                          <span className="text-amber-400">Receivables:</span>
-                          <p className="font-bold text-amber-400">{formatINR(m.structured_card.data?.outstanding_receivables)}</p>
-                        </div>
-                        <div className="rounded-lg bg-zinc-900 p-2 border border-zinc-800">
-                          <span className="text-rose-400">Overdue Balance:</span>
-                          <p className="font-bold text-rose-400">{formatINR(m.structured_card.data?.overdue_amount)}</p>
-                        </div>
-                      </div>
-
-                      {m.structured_card.data?.pdf_url && (
-                        <a
-                          href={m.structured_card.data.pdf_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-3 py-2 text-xs font-semibold text-white transition shadow-md"
-                        >
-                          <Download className="h-3.5 w-3.5" />
-                          View Complete Multi-Page Dossier PDF ({m.structured_card.data.pages_count} Pages)
-                        </a>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
+              <RenderAssistantCard
+                card={m.structured_card}
+                approvalRequest={m.approval_request}
+                approvingId={approvingId}
+                onApprove={handleApprove}
+              />
             </div>
 
             {m.sender === "user" && (

@@ -1,0 +1,54 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment & secrets (NEVER commit actual keys or .env files)
+.env
+.env.*
+*.env
+*.env.*
+**/.env
+**/.env.*
+*.pem
+*.key
+*.cert
+*.crt
+*credential*.json
+*secret*.json
+!**/.env.example
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Next.js
+frontend/.next/
+frontend/node_modules/
+frontend/.env*
+frontend/out/
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Logs
+*.log
+/tmp/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Generated Invoices
+data/invoices/*.pdf
+!data/invoices/.gitkeep

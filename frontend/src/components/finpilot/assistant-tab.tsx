@@ -265,7 +265,7 @@ function RenderAssistantCard({
     if (overdueAmt <= 0 && rawList.length === 0) return null;
 
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all space-y-2.5">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all space-y-3">
         <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
           <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase">
             <AlertTriangle className="h-4 w-4" />
@@ -290,6 +290,17 @@ function RenderAssistantCard({
             </div>
           ))}
         </div>
+        {d.pdf_url && (
+          <a
+            href={d.pdf_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-3 py-2 text-xs font-semibold text-white transition shadow-md"
+          >
+            <Download className="h-3.5 w-3.5" />
+            View Complete Multi-Page Dossier PDF ({d.pages_count || 24} Pages)
+          </a>
+        )}
       </div>
     );
   }
@@ -304,7 +315,7 @@ function RenderAssistantCard({
     if (invoiced <= 0 && collected <= 0) return null;
 
     return (
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all space-y-2.5">
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950/90 p-4 shadow-xl transition-all space-y-3">
         <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase border-b border-zinc-800 pb-2">
           <TrendingUp className="h-4 w-4" />
           <span>Corporate Financial Position</span>
@@ -327,6 +338,17 @@ function RenderAssistantCard({
             <p className="font-bold text-rose-400">{formatINR(netFlow)}</p>
           </div>
         </div>
+        {d.pdf_url && (
+          <a
+            href={d.pdf_url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 px-3 py-2 text-xs font-semibold text-white transition shadow-md"
+          >
+            <Download className="h-3.5 w-3.5" />
+            View Complete Multi-Page Dossier PDF ({d.pages_count || 24} Pages)
+          </a>
+        )}
       </div>
     );
   }
@@ -399,6 +421,7 @@ function RenderAssistantCard({
 
   return null;
 }
+
 
 
 const SUGGESTIONS = [
@@ -522,9 +545,26 @@ export function AssistantTab() {
           </div>
         </div>
 
-        <div className="hidden sm:flex items-center gap-2 text-xs text-zinc-400">
-          <ShieldCheck className="h-4 w-4 text-emerald-400" />
-          <span>Zero Hallucination Financial Math</span>
+        <div className="hidden sm:flex items-center gap-3 text-xs text-zinc-400">
+          <a
+            href={
+              typeof window !== "undefined" && localStorage.getItem("active_dossier_id") === "kavach_security"
+                ? "/dossiers/Kavach_Security_Solutions_Annual_Audit_2026.pdf"
+                : typeof window !== "undefined" && localStorage.getItem("active_dossier_id") === "zenith_digital"
+                ? "/dossiers/Zenith_Digital_Media_Q3_Financial_Review.pdf"
+                : "/dossiers/Apex_Global_Technologies_FY2025_26_Dossier.pdf"
+            }
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-rose-500/30 bg-rose-950/60 hover:bg-rose-900/80 px-2.5 py-1 text-[11px] font-medium text-rose-300 transition"
+          >
+            <FileText className="h-3.5 w-3.5 text-rose-400" />
+            <span>View Active Dossier PDF</span>
+          </a>
+          <div className="flex items-center gap-1.5">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+            <span>Zero Hallucination Financial Math</span>
+          </div>
         </div>
       </div>
 

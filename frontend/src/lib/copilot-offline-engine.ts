@@ -17,7 +17,14 @@ function formatINR(val: number | string | undefined | null): string {
   }).format(num);
 }
 
-/** Build structured card data for overdue debtors with fully populated invoices array */
+/** Get page count for dossier */
+function getPagesCount(id: string): number {
+  if (id === "kavach_security") return 25;
+  if (id === "zenith_digital") return 22;
+  return 24;
+}
+
+/** Build structured card data for overdue debtors with fully populated invoices array and PDF link */
 function buildOverdueCardData(dossier: DossierRecord) {
   const m = dossier.metrics;
   const overdueList = dossier.invoices.filter(
@@ -30,6 +37,7 @@ function buildOverdueCardData(dossier: DossierRecord) {
     invoice_number: inv.invoice_number,
     days_overdue: inv.status === "overdue" ? 45 : 30,
     amount_due: inv.balance_due || inv.total_amount,
+    pdf_path: inv.pdf_path || dossier.pdfUrl,
   }));
 
   return {
@@ -40,10 +48,13 @@ function buildOverdueCardData(dossier: DossierRecord) {
     primary_debtor: primary?.client_name || "Primary Debtor",
     invoice_number: primary?.invoice_number || "INV-2026-008",
     invoices,
+    pdf_url: dossier.pdfUrl,
+    pages_count: getPagesCount(dossier.id),
+    entity_name: dossier.name,
   };
 }
 
-/** Build structured card data for corporate financial summary */
+/** Build structured card data for corporate financial summary with PDF link */
 function buildFinancialCardData(dossier: DossierRecord) {
   const m = dossier.metrics;
   return {
@@ -58,10 +69,13 @@ function buildFinancialCardData(dossier: DossierRecord) {
     net_cash_flow: m.net_cash_flow,
     surplus: m.net_cash_flow,
     runway_months: 24,
+    pdf_url: dossier.pdfUrl,
+    pages_count: getPagesCount(dossier.id),
+    entity_name: dossier.name,
   };
 }
 
-/** Build structured card data for active statutory dossier */
+/** Build structured card data for active statutory dossier with PDF link */
 function buildDossierCardData(dossier: DossierRecord) {
   const m = dossier.metrics;
   return {
@@ -71,7 +85,7 @@ function buildDossierCardData(dossier: DossierRecord) {
     dossier_title: dossier.industry,
     industry: dossier.industry,
     gstin: dossier.gstin,
-    pages_count: 24,
+    pages_count: getPagesCount(dossier.id),
     total_invoiced: m.total_invoiced,
     invoiced: m.total_invoiced,
     total_collected: m.total_collected,
@@ -214,6 +228,10 @@ export function handleCopilotOfflineQuery(
       conversation_id: convId,
       status: "completed",
       message: `Total realized cash collections stand at **${formatINR(m.total_collected)}** (${rate}% collection rate) cleared directly into the operating bank account.`,
+      structured_card: {
+        type: "financial_summary",
+        data: buildFinancialCardData(dossier),
+      },
     };
   }
 
@@ -257,6 +275,10 @@ export function handleCopilotOfflineQuery(
 1. **PDF 1: Apex Global Technologies Pvt Ltd** (${STATUTORY_DOSSIERS.apex_global.badge}) — Invoiced ${formatINR(STATUTORY_DOSSIERS.apex_global.metrics.total_invoiced)} | Surplus ${formatINR(STATUTORY_DOSSIERS.apex_global.metrics.net_cash_flow)} (Karnataka State 29).
 2. **PDF 2: Kavach Security Solutions Pvt Ltd** (${STATUTORY_DOSSIERS.kavach_security.badge}) — Invoiced ${formatINR(STATUTORY_DOSSIERS.kavach_security.metrics.total_invoiced)} | Surplus ${formatINR(STATUTORY_DOSSIERS.kavach_security.metrics.net_cash_flow)} (Maharashtra State 27).
 3. **PDF 3: Zenith Digital Media Pvt Ltd** (${STATUTORY_DOSSIERS.zenith_digital.badge}) — Invoiced ${formatINR(STATUTORY_DOSSIERS.zenith_digital.metrics.total_invoiced)} | Surplus ${formatINR(STATUTORY_DOSSIERS.zenith_digital.metrics.net_cash_flow)} (Maharashtra State 27).`,
+      structured_card: {
+        type: "dossier_summary",
+        data: buildDossierCardData(dossier),
+      },
     };
   }
 
@@ -268,7 +290,7 @@ export function handleCopilotOfflineQuery(
     return {
       conversation_id: convId,
       status: "completed",
-      message: `**${dossier.name}** (${dossier.badge}): 24 audited pages covering ${formatINR(m.total_invoiced)} gross invoiced, ${formatINR(m.total_collected)} collections, ${formatINR(m.total_expenses)} expenses, and ${formatINR(m.net_cash_flow)} net liquid surplus under Indian Schedule III & CARO 2020 standards.`,
+      message: `**${dossier.name}** (${dossier.badge}): ${getPagesCount(dossier.id)} audited pages covering ${formatINR(m.total_invoiced)} gross invoiced, ${formatINR(m.total_collected)} collections, ${formatINR(m.total_expenses)} expenses, and ${formatINR(m.net_cash_flow)} net liquid surplus under Indian Schedule III & CARO 2020 standards.`,
       structured_card: {
         type: "dossier_summary",
         data: buildDossierCardData(dossier),
@@ -322,6 +344,10 @@ export function handleCopilotOfflineQuery(
       conversation_id: convId,
       status: "completed",
       message: `**GST Status (${dossier.name})**: GSTIN \`${dossier.gstin}\` (${dossier.state}). Standard rate is 18% under SAC 998311 & 998313. Verified 18% Input Tax Credit offset is active on cloud and tooling expenditures.`,
+      structured_card: {
+        type: "dossier_summary",
+        data: buildDossierCardData(dossier),
+      },
     };
   }
 

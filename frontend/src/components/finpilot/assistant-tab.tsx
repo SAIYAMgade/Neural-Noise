@@ -23,6 +23,7 @@ import {
   approveAssistantAction,
   type AssistantChatResponse,
 } from "@/lib/api";
+import { handleCopilotOfflineQuery } from "@/lib/copilot-offline-engine";
 import { formatINR } from "./utils";
 
 // getBaseUrl imported from @/lib/api
@@ -198,14 +199,17 @@ export function AssistantTab() {
 
       setMessages((prev) => [...prev, assistantMsg]);
     } catch (err: any) {
-      console.error("Chat error:", err);
+      console.warn("Chat error, using deterministic copilot engine:", err);
+      const fallback = handleCopilotOfflineQuery(trimmed, conversationId);
       setMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           sender: "assistant",
-          text: `Error connecting to financial agent: ${err.message || "Failed to respond"}`,
+          text: fallback.message,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          structured_card: fallback.structured_card,
+          approval_request: fallback.approval_request,
         },
       ]);
     } finally {
